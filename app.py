@@ -11,25 +11,9 @@ st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] { background: #0a0f1e; }
 [data-testid="stSidebar"] { background-color: #0d1b2a; }
-.trust-high {
-    background: #064e3b; border: 1px solid #10b981;
-    border-radius: 12px; padding: 16px; color: #6ee7b7;
-    font-size: 18px; font-weight: bold; text-align: center;
-}
-.trust-medium {
-    background: #451a03; border: 1px solid #f59e0b;
-    border-radius: 12px; padding: 16px; color: #fcd34d;
-    font-size: 18px; font-weight: bold; text-align: center;
-}
-.trust-low {
-    background: #450a0a; border: 1px solid #ef4444;
-    border-radius: 12px; padding: 16px; color: #fca5a5;
-    font-size: 18px; font-weight: bold; text-align: center;
-}
-.mol-card {
-    background: #112240; border: 1px solid #1d4ed8;
-    border-radius: 12px; padding: 16px; margin: 4px 0;
-}
+.trust-high { background: #064e3b; border: 1px solid #10b981; border-radius: 12px; padding: 16px; color: #6ee7b7; font-size: 18px; font-weight: bold; text-align: center; }
+.trust-medium { background: #451a03; border: 1px solid #f59e0b; border-radius: 12px; padding: 16px; color: #fcd34d; font-size: 18px; font-weight: bold; text-align: center; }
+.trust-low { background: #450a0a; border: 1px solid #ef4444; border-radius: 12px; padding: 16px; color: #fca5a5; font-size: 18px; font-weight: bold; text-align: center; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -41,27 +25,16 @@ with st.sidebar:
     st.markdown("Built by **Kirtana Premnath**\nMSc Bioinformatics")
     st.markdown("---")
     st.markdown("### What is SMILES?")
-    st.markdown("""
-    SMILES is a way of writing a molecule 
-    as a line of text. For example:
-    
-    Aspirin = `CC(=O)Oc1ccccc1C(=O)O`
-    
-    Every atom and bond is encoded 
-    in that string of letters.
-    """)
+    st.markdown("SMILES is a way of writing a molecule as text. Aspirin = `CC(=O)Oc1ccccc1C(=O)O`")
 
 st.title("🔬 ConformalDock")
 st.markdown("#### Calibrated Uncertainty for Molecular Docking Scores")
 st.markdown("*Know not just what the score is — but how much to trust it.*")
 st.markdown("---")
 
-st.markdown("### Step 1 — Enter your molecule")
+st.markdown("### Enter your molecule")
 
-smiles = st.text_input(
-    "Paste a SMILES string here",
-    placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O"
-)
+smiles = st.text_input("Paste a SMILES string here", placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O")
 
 st.markdown("**Or click an example:**")
 col1, col2, col3 = st.columns(3)
@@ -81,20 +54,16 @@ if smiles:
     try:
         from rdkit import Chem
         from rdkit.Chem import Descriptors, rdMolDescriptors
-        from rdkit.Chem import Draw
-        from rdkit.Chem.Draw import rdMolDraw2D
-        import io
-        from PIL import Image
 
         mol = Chem.MolFromSmiles(smiles)
 
         if mol is None:
-            st.error("Could not read that molecule. Please check the SMILES string and try again.")
+            st.error("Could not read that molecule. Please check the SMILES string.")
         else:
-            st.success("Molecule recognised successfully!")
+            st.success("Molecule recognised!")
 
-            st.markdown("### Step 2 — Molecule properties")
-            st.markdown("These are **real values** calculated directly from the molecule structure.")
+            st.markdown("### Real molecular properties")
+            st.markdown("These numbers come directly from reading the molecule structure — not made up.")
 
             mw = round(Descriptors.MolWt(mol), 2)
             logp = round(Descriptors.MolLogP(mol), 2)
@@ -107,52 +76,83 @@ if smiles:
 
             c1, c2, c3, c4 = st.columns(4)
             with c1:
-                st.metric("Molecular weight", str(mw) + " g/mol",
-                    help="How heavy the molecule is")
+                st.metric("Molecular weight", str(mw) + " g/mol")
             with c2:
-                st.metric("LogP", str(logp),
-                    help="How oily vs watery the molecule is. Between -2 and 5 is ideal for drugs.")
+                st.metric("LogP", str(logp))
             with c3:
-                st.metric("H-bond donors", str(hbd),
-                    help="How many hydrogen bonds this molecule can donate")
+                st.metric("H-bond donors", str(hbd))
             with c4:
-                st.metric("H-bond acceptors", str(hba),
-                    help="How many hydrogen bonds this molecule can accept")
+                st.metric("H-bond acceptors", str(hba))
 
             c5, c6, c7, c8 = st.columns(4)
             with c5:
-                st.metric("Ring count", str(rings),
-                    help="Number of ring structures in the molecule")
+                st.metric("Rings", str(rings))
             with c6:
-                st.metric("Rotatable bonds", str(rotbonds),
-                    help="Flexibility of the molecule")
+                st.metric("Rotatable bonds", str(rotbonds))
             with c7:
-                st.metric("TPSA", str(tpsa),
-                    help="Topological polar surface area — relates to how well drug crosses cell membranes")
+                st.metric("TPSA", str(tpsa))
             with c8:
-                st.metric("Atom count", str(atoms),
-                    help="Total number of heavy atoms")
+                st.metric("Atoms", str(atoms))
 
-            st.markdown("### Step 3 — Drug-likeness check")
-            st.markdown("Lipinski's Rule of Five — the standard checklist for whether a molecule could be an oral drug:")
+            st.markdown("### Drug-likeness check (Lipinski rules)")
 
-            rules = {
-                "Molecular weight under 500": mw <= 500,
-                "LogP under 5 (not too oily)": logp <= 5,
-                "H-bond donors 5 or fewer": hbd <= 5,
-                "H-bond acceptors 10 or fewer": hba <= 10,
-            }
+            rule1 = mw <= 500
+            rule2 = logp <= 5
+            rule3 = hbd <= 5
+            rule4 = hba <= 10
+            passed = sum([rule1, rule2, rule3, rule4])
 
-            passed = sum(rules.values())
             rc1, rc2 = st.columns(2)
-            for i, (rule, ok) in enumerate(rules.items()):
-                col = rc1 if i % 2 == 0 else rc2
-                with col:
-                    if ok:
-                        st.success("✅ " + rule)
-                    else:
-                        st.error("❌ " + rule)
+            with rc1:
+                if rule1:
+                    st.success("Molecular weight under 500")
+                else:
+                    st.error("Molecular weight over 500")
+                if rule2:
+                    st.success("LogP under 5")
+                else:
+                    st.error("LogP over 5")
+            with rc2:
+                if rule3:
+                    st.success("H-bond donors 5 or fewer")
+                else:
+                    st.error("H-bond donors over 5")
+                if rule4:
+                    st.success("H-bond acceptors 10 or fewer")
+                else:
+                    st.error("H-bond acceptors over 10")
+
+            st.markdown("<br>", unsafe_allow_html=True)
 
             if passed == 4:
-                st.markdown('<div class="trust-high">✅ Passes all drug-likeness rules — good oral drug candidate</div>', unsafe_allow_html=True)
-            elif passed >= 3:
+                st.markdown('<div class="trust-high">All 4 drug-likeness rules passed — good oral drug candidate</div>', unsafe_allow_html=True)
+            elif passed == 3:
+                st.markdown('<div class="trust-medium">3 out of 4 rules passed — borderline drug candidate</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="trust-low">Only ' + str(passed) + ' rules passed — unlikely oral drug</div>', unsafe_allow_html=True)
+
+            st.markdown("---")
+            st.markdown("### Binding prediction")
+            st.info("Real ML model coming next session. Placeholder numbers shown below.")
+
+            np.random.seed(sum(ord(c) for c in smiles))
+            score = round(np.random.uniform(-10.5, -5.0), 2)
+            margin = round((100 - confidence) * 0.18 + 1.2, 2)
+            lower = round(score - margin, 2)
+            upper = round(score + margin, 2)
+            width = round(upper - lower, 2)
+
+            bc1, bc2, bc3 = st.columns(3)
+            with bc1:
+                st.metric("Predicted score", str(score) + " kcal/mol")
+            with bc2:
+                st.metric("Confidence interval (" + str(confidence) + "%)", "[" + str(lower) + ", " + str(upper) + "]")
+            with bc3:
+                st.metric("Interval width", str(width) + " kcal/mol")
+
+    except Exception as e:
+        st.error("Something went wrong. Try a different SMILES string.")
+        st.write(str(e))
+
+st.markdown("---")
+st.markdown("<p style='text-align:center; color:#475569;'>ConformalDock · Built by Kirtana Premnath · MSc Bioinformatics · 2024</p>", unsafe_allow_html=True)
