@@ -26,4 +26,4 @@ prediction — so you know not just *what* the score is, but
 - See which molecules the model is uncertain about
 """)
 
-st.info("Built by KirtanaPrem · MSc Bioinformatics")
+st.info("Built by Kirtana Premnath · MSc Bioinformatics")
