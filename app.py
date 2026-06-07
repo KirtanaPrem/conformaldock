@@ -133,8 +133,7 @@ def resolve_name_to_smiles(name):
         import urllib.parse
         encoded = urllib.parse.quote(name.strip())
         url = "https://cactus.nci.nih.gov/chemical/structure/" + encoded + "/smiles"
-        resp = requests.get(url, timeout=8,
-                            headers={"User-Agent": "ConformalDock/1.0"})
+        resp = requests.get(url, timeout=8, headers={"User-Agent": "ConformalDock/1.0"})
         if resp.status_code == 200:
             smiles = resp.text.strip()
             if smiles and not smiles.startswith("<") and len(smiles) > 2:
@@ -147,8 +146,7 @@ def resolve_name_to_smiles(name):
             + requests.utils.quote(name.strip())
             + "/property/CanonicalSMILES/JSON"
         )
-        resp2 = requests.get(url2, timeout=10,
-                             headers={"User-Agent": "ConformalDock/1.0"})
+        resp2 = requests.get(url2, timeout=10, headers={"User-Agent": "ConformalDock/1.0"})
         if resp2.status_code == 200:
             smiles = resp2.json()["PropertyTable"]["Properties"][0]["CanonicalSMILES"]
             if smiles:
@@ -283,7 +281,7 @@ def get_similarity(features, X_train_s, scaler):
     dists = np.linalg.norm(X_train_s - q, axis=1)
     return round(min(max(float(np.exp(-dists.min() / 15)), 0.05), 0.99), 2)
 
-def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
+def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage, n_train, n_cal):
     from rdkit.Chem import Descriptors, rdMolDescriptors
     mw = round(Descriptors.MolWt(mol), 2)
     logp = round(Descriptors.MolLogP(mol), 2)
@@ -377,9 +375,12 @@ def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
 Conformal prediction converts any ML model into one with a **mathematically guaranteed** interval.
 
 Instead of assuming the data follows a specific distribution, it uses a held-out calibration set
-to measure how wrong the model typically is, then sets interval width to guarantee coverage.
+to measure how wrong the model typically is, then sets the interval width to guarantee coverage.
 
-**Conformal quantile:** """ + str(result_cp["q_hat"]) + """ kcal/mol · **Calibration set:** """ + str(result_cp["n_cal"]) + """ molecules
+**Validated result:** 90.6% empirical coverage at 90% nominal level on 926 held-out molecules.
+
+**Conformal quantile (q̂):** """ + str(result_cp["q_hat"]) + """ kcal/mol
+**Calibration set size:** """ + str(n_cal) + """ molecules
         """)
 
     with st.expander("Feature importance — what drove this prediction?"):
@@ -409,22 +410,25 @@ to measure how wrong the model typically is, then sets interval width to guarant
 
 with st.sidebar:
     st.markdown("## ⚙️ Settings")
-    coverage = st.slider("Coverage level", 80, 95, 90, 5)
+    coverage = st.slider("Coverage level", 80, 95, 90, 5,
+        help="The probability that the true binding score falls inside the predicted interval")
     st.markdown("---")
     st.markdown("### How it works")
     st.markdown("""
-1. Search any molecule by name
-2. Resolved via NCI Cactus or PubChem
-3. **ChEMBL** provides real binding data
-4. **Gradient Boosting** predicts score
-5. **Conformal prediction** guarantees interval
+1. **Search** any molecule by name
+2. **Structure** fetched from NCI Cactus or PubChem
+3. **ChEMBL** IC50 data trains the model
+4. **Gradient Boosting** predicts binding score
+5. **Conformal prediction** guarantees the interval
     """)
     st.markdown("---")
-    st.markdown("**Kirtana Premnath**\nMSc Bioinformatics & Data Science")
+    st.markdown("**Kirtana Premnath**")
+    st.markdown("MSc Bioinformatics & Data Science")
+    st.markdown("Sathyabama Institute of Science and Technology")
 
 st.markdown('<div class="app-title">🔬 <span>Conformal</span>Dock</div>', unsafe_allow_html=True)
 st.markdown('<div class="app-sub">Calibrated Uncertainty for Molecular Docking Scores · Trained on real experimental data from ChEMBL</div>', unsafe_allow_html=True)
-st.markdown('<div class="data-badge"><div class="dot-green"></div> Model trained on real ChEMBL experimental measurements · Empirically validated</div>', unsafe_allow_html=True)
+st.markdown('<div class="data-badge"><div class="dot-green"></div> Model trained on 4,629 real ChEMBL measurements · Empirically validated · 90.6% coverage confirmed</div>', unsafe_allow_html=True)
 
 with st.spinner("Loading model..."):
     model, scaler, cal_residuals, X_train_s, n_train, n_cal = build_model()
@@ -455,7 +459,7 @@ with tab1:
             mol = Chem.MolFromSmiles(smiles_input)
             if mol:
                 st.markdown("---")
-                show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage)
+                show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage, n_train, n_cal)
             else:
                 st.error("Could not parse SMILES — please check and try again.")
 
@@ -501,7 +505,7 @@ with tab1:
 
         drug_name = st.text_input(
             "Type any drug, molecule, or compound name",
-            placeholder="e.g. penicillin, acetylcholine, sildenafil, cannabigerol..."
+            placeholder="e.g. penicillin, acetylcholine, sildenafil, cannabigerol, resveratrol..."
         )
 
         if drug_name and drug_name != st.session_state.get("last_query", ""):
@@ -533,7 +537,7 @@ with tab1:
         if source == "not_found" and st.session_state.get("last_query"):
             st.error(
                 "Could not find \"" + st.session_state["last_query"] + "\". "
-                "Try a different spelling, or use the SMILES option above."
+                "Try a different spelling, or switch to 'Paste SMILES directly' above."
             )
         elif active_smiles:
             source_label = ""
@@ -553,7 +557,7 @@ with tab1:
             mol = Chem.MolFromSmiles(active_smiles)
             if mol:
                 st.markdown("---")
-                show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage)
+                show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage, n_train, n_cal)
             else:
                 st.error("Could not parse this compound. Try searching by SMILES directly.")
 
@@ -570,7 +574,7 @@ with tab2:
         "Coverage requested": ["80%", "85%", "90%", "95%"],
         "Empirical coverage": ["80.1% ✓", "85.2% ✓", "90.6% ✓", "95.4% ✓"],
         "Interval width": ["3.73 kcal/mol", "4.23 kcal/mol", "4.88 kcal/mol", "5.80 kcal/mol"],
-        "q_hat": ["1.864", "2.113", "2.442", "2.899"],
+        "q̂ (kcal/mol)": ["1.864", "2.113", "2.442", "2.899"],
     })
     st.dataframe(val_df, use_container_width=True, hide_index=True)
 
@@ -619,10 +623,11 @@ The conformal coverage guarantee has been empirically confirmed:
 - **90.6% empirical coverage at 90% nominal level** on 926 held-out molecules
 - All four coverage levels (80%, 85%, 90%, 95%) confirmed within 0.5% of target
 - Dataset: 4,629 real ChEMBL IC50 measurements across 50 protein targets
+- Reproducible: validation notebook available at github.com/KirtanaPrem/conformaldock
 
 ### Molecule search
 Name resolution uses three layers in order:
-1. **Local dictionary** — instant results for 60+ common drugs
+1. **Local dictionary** — instant results for 60+ common drugs and compounds
 2. **NCI Cactus** — the National Cancer Institute's free chemical name resolver
 3. **PubChem** — the world's largest open chemistry database
 
