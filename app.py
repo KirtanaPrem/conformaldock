@@ -55,13 +55,61 @@ section[data-testid="stSidebar"] .stMarkdown h2 { color: #fafaf9; }
 .feat-track { flex: 1; background: #44403c; border-radius: 3px; height: 5px; }
 .feat-fill { background: #fb923c; border-radius: 3px; height: 5px; }
 .feat-pct { color: #78716c; font-size: 10px; min-width: 30px; text-align: right; }
-.search-found { background: #292524; border: 1px solid #44403c; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+.search-found { background: #292524; border: 1px solid #fb923c; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
 .search-name { color: #fafaf9; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
 .search-smiles { color: #57534e; font-size: 9px; font-family: monospace; word-break: break-all; }
 .citation-box { background: #292524; border: 1px solid #44403c; border-radius: 8px; padding: 10px 14px; margin-top: 16px; color: #57534e; font-size: 10px; line-height: 1.7; }
 </style>
 """, unsafe_allow_html=True)
 
+MOLECULE_SMILES = {
+    "aspirin": ("CC(=O)Oc1ccccc1C(=O)O", "Aspirin", "C9H8O4"),
+    "ibuprofen": ("CC(C)Cc1ccc(cc1)C(C)C(=O)O", "Ibuprofen", "C13H18O2"),
+    "caffeine": ("Cn1cnc2c1c(=O)n(c(=O)n2C)C", "Caffeine", "C8H10N4O2"),
+    "morphine": ("CN1CCC23c4c(ccc(O)c4OC2(O)C=CC1C3)O", "Morphine", "C17H19NO3"),
+    "paracetamol": ("CC(=O)Nc1ccc(O)cc1", "Paracetamol", "C8H9NO2"),
+    "acetaminophen": ("CC(=O)Nc1ccc(O)cc1", "Acetaminophen", "C8H9NO2"),
+    "penicillin": ("CC1(C)SC2C(NC1=O)C(=O)N2Cc1ccccc1", "Penicillin G", "C16H18N2O4S"),
+    "metformin": ("CN(C)C(=N)NC(N)=N", "Metformin", "C4H11N5"),
+    "atorvastatin": ("CC(C)c1c(C(=O)Nc2ccccc2F)c(-c2ccccc2)c(-c2ccc(F)cc2)n1CCC(O)CC(O)CC(=O)O", "Atorvastatin", "C33H35FN2O5"),
+    "omeprazole": ("COc1ccc2nc([nH]c2c1)S(=O)Cc1ncc(C)c(OC)c1C", "Omeprazole", "C17H19N3O3S"),
+    "sildenafil": ("CCCC1=NN(C)C(=O)c2c1[nH]c1ccc(cc1c2=O)S(=O)(=O)N1CCN(CC1)C", "Sildenafil", "C22H30N6O4S"),
+    "marijuana": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC (Cannabis)", "C21H30O2"),
+    "thc": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC", "C21H30O2"),
+    "tetrahydrocannabinol": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "Tetrahydrocannabinol", "C21H30O2"),
+    "cocaine": ("COC(=O)C1CC(OC(=O)c2ccccc2)CC1N", "Cocaine", "C17H21NO4"),
+    "heroin": ("CC(=O)OC1CC(=CC2CC(OC(C)=O)C(=CC12)N(C)C)NC", "Heroin", "C21H23NO5"),
+    "alcohol": ("CCO", "Ethanol", "C2H6O"),
+    "ethanol": ("CCO", "Ethanol", "C2H6O"),
+    "glucose": ("OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O", "Glucose", "C6H12O6"),
+    "dopamine": ("NCCc1ccc(O)c(O)c1", "Dopamine", "C8H11NO2"),
+    "serotonin": ("NCCc1c[nH]c2ccc(O)cc12", "Serotonin", "C10H12N2O"),
+    "adrenaline": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Adrenaline", "C9H13NO3"),
+    "epinephrine": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Epinephrine", "C9H13NO3"),
+    "melatonin": ("COc1ccc2[nH]cc(CCNC(C)=O)c2c1", "Melatonin", "C13H16N2O2"),
+    "nicotine": ("CN1CCCC1c1cccnc1", "Nicotine", "C10H14N2"),
+    "codeine": ("COc1ccc2CC3N(C)CCC4(c1c2O3)c1ccccc1O4", "Codeine", "C18H21NO3"),
+    "diazepam": ("CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21", "Diazepam (Valium)", "C16H13ClN2O"),
+    "valium": ("CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21", "Diazepam (Valium)", "C16H13ClN2O"),
+    "ketamine": ("CN1CC(=O)c2ccccc2C1=O", "Ketamine", "C13H16ClNO"),
+    "mdma": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA (Ecstasy)", "C11H15NO2"),
+    "ecstasy": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA (Ecstasy)", "C11H15NO2"),
+    "lsd": ("CCN(CC)C(=O)C1CN(C)C2Cc3c[nH]c4cccc(c34)C2=C1", "LSD", "C20H25N3O"),
+    "warfarin": ("CC(=O)CC(c1ccccc1)c1c(O)c2ccccc2oc1=O", "Warfarin", "C19H16O4"),
+    "methadone": ("CCC(=O)C(CC(C)N(C)C)(c1ccccc1)c1ccccc1", "Methadone", "C21H27NO"),
+    "lithium": ("[Li+]", "Lithium", "Li"),
+    "insulin": ("CCC(C)C1NC(=O)C(Cc2ccccc2)NC(=O)C", "Insulin fragment", "C11H13N2O3"),
+    "vitamin c": ("OC(=O)C1OC(=O)C(O)=C1O", "Vitamin C", "C6H8O6"),
+    "cholesterol": ("CC(C)CCCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C", "Cholesterol", "C27H46O"),
+    "testosterone": ("CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C", "Testosterone", "C19H28O2"),
+    "estrogen": ("CC12CCC3c4ccc(O)cc4CCC3C1CCC2O", "Estradiol", "C18H24O2"),
+    "cortisol": ("CC12CCC3C(C1CCC2(C(=O)CO)O)CCC4=CC(=O)CCC34C", "Cortisol", "C21H30O5"),
+    "penicillin g": ("CC1(C)SC2C(NC1=O)C(=O)N2Cc1ccccc1", "Penicillin G", "C16H18N2O4S"),
+    "amoxicillin": ("CC1(C)SC2C(NC1=O)C(=O)N2C(C(=O)O)c1ccc(N)cc1", "Amoxicillin", "C16H19N3O5S"),
+    "chloroquine": ("CCN(CC)CCCC(C)Nc1ccnc2cc(Cl)ccc12", "Chloroquine", "C18H26ClN3"),
+    "remdesivir": ("CCC(CC)COC(=O)c1ccc(N)nc1NC(=O)C1OC(n2cnc3c(N)ncnc32)C(F)(F)C1F", "Remdesivir", "C27H35FN6O8P"),
+    "acetylsalicylic acid": ("CC(=O)Oc1ccccc1C(=O)O", "Aspirin", "C9H8O4"),
+}
 
 def get_features(mol):
     from rdkit.Chem import Descriptors, rdMolDescriptors
@@ -84,7 +132,6 @@ def get_features(mol):
         rdMolDescriptors.CalcNumHeterocycles(mol),
     ]
 
-
 def get_feature_names():
     return [
         "Molecular weight", "LogP", "H-bond donors", "H-bond acceptors",
@@ -93,29 +140,35 @@ def get_feature_names():
         "Radical electrons", "Valence electrons", "Amide bonds", "Heterocycles"
     ]
 
-
-def search_pubchem(name):
+def lookup_molecule(name):
+    key = name.strip().lower()
+    if key in MOLECULE_SMILES:
+        smiles, display_name, formula = MOLECULE_SMILES[key]
+        return {"smiles": smiles, "name": display_name, "formula": formula, "mw": ""}
+    for k, (smiles, display_name, formula) in MOLECULE_SMILES.items():
+        if key in k or k in display_name.lower():
+            return {"smiles": smiles, "name": display_name, "formula": formula, "mw": ""}
     try:
         url = (
             "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
-            + requests.utils.quote(name.strip())
+            + requests.utils.quote(key)
             + "/property/CanonicalSMILES,IUPACName,MolecularFormula,MolecularWeight/JSON"
         )
-        resp = requests.get(url, timeout=10)
-        if resp.status_code != 200:
-            return None
-        data = resp.json()
-        props = data["PropertyTable"]["Properties"][0]
-        smiles = props.get("CanonicalSMILES") or props.get("IsomericSMILES") or ""
-        return {
-            "smiles": smiles,
-            "name": props.get("IUPACName", name),
-            "formula": props.get("MolecularFormula", ""),
-            "mw": props.get("MolecularWeight", ""),
-        }
+        headers = {"Accept": "application/json", "User-Agent": "ConformalDock/1.0"}
+        resp = requests.get(url, timeout=12, headers=headers)
+        if resp.status_code == 200:
+            props = resp.json()["PropertyTable"]["Properties"][0]
+            smiles = props.get("CanonicalSMILES") or props.get("IsomericSMILES") or ""
+            if smiles:
+                return {
+                    "smiles": smiles,
+                    "name": props.get("IUPACName", name).title(),
+                    "formula": props.get("MolecularFormula", ""),
+                    "mw": str(props.get("MolecularWeight", "")),
+                }
     except:
-        return None
-
+        pass
+    return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_chembl_data():
@@ -156,7 +209,6 @@ def fetch_chembl_data():
             continue
     return all_smiles, all_scores
 
-
 @st.cache_resource(show_spinner=False)
 def build_model():
     from rdkit import Chem
@@ -185,7 +237,6 @@ def build_model():
     cal_residuals = np.abs(y_cal - model.predict(X_cal_s))
     return model, scaler, cal_residuals, X_train_s, len(y_train), len(y_cal)
 
-
 def conformal_predict(model, scaler, cal_residuals, features, coverage):
     fa = np.array(features).reshape(1, -1)
     fs = scaler.transform(fa)
@@ -203,12 +254,10 @@ def conformal_predict(model, scaler, cal_residuals, features, coverage):
         "n_cal": n,
     }
 
-
 def get_similarity(features, X_train_s, scaler):
     q = scaler.transform(np.array(features).reshape(1, -1))
     dists = np.linalg.norm(X_train_s - q, axis=1)
     return round(min(max(float(np.exp(-dists.min() / 15)), 0.05), 0.99), 2)
-
 
 with st.sidebar:
     st.markdown("## ⚙️ Settings")
@@ -249,12 +298,11 @@ with tab1:
     )
 
     smiles = ""
-    drug_name = ""
 
     if search_mode == "Search by name":
         drug_name = st.text_input(
             "Type any drug or molecule name",
-            placeholder="e.g. aspirin, caffeine, ibuprofen, morphine, marijuana..."
+            placeholder="e.g. aspirin, caffeine, marijuana, morphine, cocaine, dopamine..."
         )
 
         st.markdown("**Quick examples:**")
@@ -273,14 +321,14 @@ with tab1:
                 drug_name = "morphine"
         with ec5:
             if st.button("THC", use_container_width=True):
-                drug_name = "tetrahydrocannabinol"
+                drug_name = "thc"
 
         if drug_name:
-            with st.spinner("Searching PubChem for " + drug_name + "..."):
-                pub_result = search_pubchem(drug_name)
+            with st.spinner("Looking up " + drug_name + "..."):
+                pub_result = lookup_molecule(drug_name)
             if pub_result and pub_result["smiles"]:
                 smiles = pub_result["smiles"]
-                display_name = pub_result["name"].title()
+                display_name = pub_result["name"]
                 formula = pub_result["formula"]
                 short_smiles = smiles[:80] + ("..." if len(smiles) > 80 else "")
                 st.markdown(
@@ -291,7 +339,7 @@ with tab1:
                     unsafe_allow_html=True
                 )
             else:
-                st.error("Could not find " + drug_name + " — try a different name or spelling")
+                st.error("Could not find \"" + drug_name + "\" — try another name or spelling. Examples: aspirin, cocaine, dopamine, serotonin, nicotine")
     else:
         smiles = st.text_input(
             "Paste SMILES string",
@@ -444,7 +492,6 @@ with tab2:
         st.metric("Data source", "ChEMBL")
     with mc4:
         st.metric("Features", "16")
-
     st.markdown("### Method comparison")
     comparison = pd.DataFrame({
         "Method": ["AutoDock Vina", "Random Forest", "RF + heuristic interval", "ConformalDock (this work)"],
