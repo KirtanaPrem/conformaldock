@@ -402,7 +402,7 @@ to measure how wrong the model typically is, then sets the interval width to gua
         '<div class="citation-box">'
         'Kirtana Premnath (2026). ConformalDock: Calibrated Uncertainty Quantification for '
         'Molecular Docking Scores using Conformal Prediction. '
-        'MSc Bioinformatics and Data Science, Sathyabama Institute of Science and Technology, Chennai. '
+        'Independent Researcher, Chennai, India. '
         'conformaldock-kirtana.streamlit.app'
         '</div>',
         unsafe_allow_html=True
@@ -423,8 +423,7 @@ with st.sidebar:
     """)
     st.markdown("---")
     st.markdown("**Kirtana Premnath**")
-    st.markdown("MSc Bioinformatics & Data Science")
-    st.markdown("Sathyabama Institute of Science and Technology")
+    st.markdown("Independent Researcher · Chennai, India")
 
 st.markdown('<div class="app-title">🔬 <span>Conformal</span>Dock</div>', unsafe_allow_html=True)
 st.markdown('<div class="app-sub">Calibrated Uncertainty for Molecular Docking Scores · Trained on real experimental data from ChEMBL</div>', unsafe_allow_html=True)
@@ -634,7 +633,7 @@ Name resolution uses three layers in order:
 ### How to cite
 *Kirtana Premnath (2026). ConformalDock: Calibrated Uncertainty Quantification
 for Molecular Docking Scores using Conformal Prediction.
-MSc Bioinformatics and Data Science, Sathyabama Institute of Science and Technology, Chennai.
+Independent Researcher, Chennai, India.
 conformaldock-kirtana.streamlit.app*
 
 ### Links
@@ -647,7 +646,7 @@ conformaldock-kirtana.streamlit.app*
 st.markdown("---")
 st.markdown(
     "<p style='text-align:center;color:#44403c;font-size:11px;'>"
-    "ConformalDock · Kirtana Premnath · MSc Bioinformatics and Data Science · 2026"
+    "ConformalDock · Kirtana Premnath · Independent Researcher · Chennai, India · 2026"
     "</p>",
     unsafe_allow_html=True
 )
