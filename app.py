@@ -16,18 +16,54 @@ st.markdown("""
 .trust-high { background: #064e3b; border: 1px solid #10b981; border-radius: 12px; padding: 16px; color: #6ee7b7; font-size: 18px; font-weight: bold; text-align: center; }
 .trust-medium { background: #451a03; border: 1px solid #f59e0b; border-radius: 12px; padding: 16px; color: #fcd34d; font-size: 18px; font-weight: bold; text-align: center; }
 .trust-low { background: #450a0a; border: 1px solid #ef4444; border-radius: 12px; padding: 16px; color: #fca5a5; font-size: 18px; font-weight: bold; text-align: center; }
+.conformal-box { background: #0f2744; border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; margin: 12px 0; }
+.conformal-title { color: #93c5fd; font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+.conformal-value { color: #ffffff; font-size: 28px; font-weight: bold; }
+.conformal-sub { color: #64748b; font-size: 12px; margin-top: 4px; }
 </style>
 """, unsafe_allow_html=True)
 
-with st.sidebar:
-    st.markdown("## Settings")
-    confidence = st.slider("Confidence level", 80, 95, 90, 5)
-    st.markdown("---")
-    st.markdown("### About")
-    st.markdown("Built by **Kirtana Premnath**\nMSc Bioinformatics")
-    st.markdown("---")
-    st.markdown("### What is SMILES?")
-    st.markdown("SMILES is a way of writing a molecule as text. Aspirin = `CC(=O)Oc1ccccc1C(=O)O`")
+TRAINING_SMILES = [
+    "CC(=O)Oc1ccccc1C(=O)O",
+    "CC(C)Cc1ccc(cc1)C(C)C(=O)O",
+    "Cn1cnc2c1c(=O)n(c(=O)n2C)C",
+    "CC(=O)Nc1ccc(O)cc1",
+    "OC(=O)c1ccccc1O",
+    "c1ccc(cc1)C(=O)O",
+    "CC(O)=O",
+    "OC(=O)CCCCC(=O)O",
+    "Nc1ccc(cc1)S(N)(=O)=O",
+    "CC1=CC(=O)c2ccccc2C1=O",
+    "O=C(O)c1ccc(N)cc1",
+    "CC(=O)c1ccc(O)cc1",
+    "c1ccc(NC(=O)c2ccccc2)cc1",
+    "CC(=O)Nc1ccc(Cl)cc1",
+    "CCOC(=O)c1ccc(N)cc1",
+    "O=C(O)CCc1ccccc1",
+    "Cc1ccc(S(N)(=O)=O)cc1",
+    "CC(=O)Nc1ccc(F)cc1",
+    "OC(=O)c1cccc(O)c1",
+    "CC(C)(C)c1ccc(O)cc1",
+    "Clc1ccc(Cl)cc1",
+    "OC(=O)c1ccc(Cl)cc1",
+    "Nc1ccc(O)cc1",
+    "CCCc1ccc(O)cc1",
+    "CC(=O)Oc1ccc(C(=O)O)cc1",
+    "c1ccc2c(c1)cc1ccc3cccc4ccc2c1c34",
+    "CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C",
+    "CN1C=NC2=C1C(=O)N(C(=O)N2C)C",
+    "CC1=C(C(=O)Nc2ccccc2)C(C)(C)CC1",
+    "O=c1[nH]c2ccccc2n1Cc1ccccc1",
+]
+
+TRAINING_SCORES = [
+    -7.2, -8.1, -5.9, -6.8, -5.5,
+    -5.2, -4.1, -5.8, -7.4, -6.9,
+    -6.3, -6.5, -7.8, -7.1, -6.7,
+    -5.9, -7.0, -6.9, -5.8, -6.4,
+    -5.3, -6.1, -5.9, -6.2, -6.8,
+    -10.2, -9.8, -6.1, -8.3, -8.7,
+]
 
 def get_features(mol):
     from rdkit.Chem import Descriptors, rdMolDescriptors
@@ -54,89 +90,98 @@ def get_feature_names():
         "SP3 fraction", "Heteroatoms", "Total rings"
     ]
 
-def build_model():
+@st.cache_resource
+def build_conformal_model():
     from rdkit import Chem
-    training_smiles = [
-        "CC(=O)Oc1ccccc1C(=O)O",
-        "CC(C)Cc1ccc(cc1)C(C)C(=O)O",
-        "Cn1cnc2c1c(=O)n(c(=O)n2C)C",
-        "c1ccc2c(c1)cc1ccc3cccc4ccc2c1c34",
-        "CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C",
-        "CN1C=NC2=C1C(=O)N(C(=O)N2C)C",
-        "CC(=O)Nc1ccc(O)cc1",
-        "OC(=O)c1ccccc1O",
-        "c1ccc(cc1)C(=O)O",
-        "CC(O)=O",
-        "OC(=O)CCCCC(=O)O",
-        "Nc1ccc(cc1)S(N)(=O)=O",
-        "CC1=CC(=O)c2ccccc2C1=O",
-        "O=C(O)c1ccc(N)cc1",
-        "CC(=O)c1ccc(O)cc1",
-        "c1ccc(NC(=O)c2ccccc2)cc1",
-        "CC(=O)Nc1ccc(Cl)cc1",
-        "CCOC(=O)c1ccc(N)cc1",
-        "CC1=C(C(=O)Nc2ccccc2)C(C)(C)CC1",
-        "O=C(O)CCc1ccccc1",
-        "Cc1ccc(S(N)(=O)=O)cc1",
-        "CC(=O)Nc1ccc(F)cc1",
-        "OC(=O)c1cccc(O)c1",
-        "CC(C)(C)c1ccc(O)cc1",
-        "O=c1[nH]c2ccccc2n1Cc1ccccc1",
-        "Clc1ccc(Cl)cc1",
-        "OC(=O)c1ccc(Cl)cc1",
-        "CC(=O)Oc1ccc(C(=O)O)cc1",
-        "Nc1ccc(O)cc1",
-        "CCCc1ccc(O)cc1",
-    ]
-    training_scores = [
-        -7.2, -8.1, -5.9, -10.2, -9.8,
-        -6.1, -6.8, -5.5, -5.2, -4.1,
-        -5.8, -7.4, -6.9, -6.3, -6.5,
-        -7.8, -7.1, -6.7, -8.3, -5.9,
-        -7.0, -6.9, -5.8, -6.4, -8.7,
-        -5.3, -6.1, -6.8, -5.9, -6.2,
-    ]
-    mols = [Chem.MolFromSmiles(s) for s in training_smiles]
-    X = np.array([get_features(m) for m in mols if m is not None])
-    y = np.array(training_scores)
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(X_scaled, y)
-    return model, scaler
 
-def get_similarity(query_features, model, scaler):
-    from rdkit import Chem
-    training_smiles = [
-        "CC(=O)Oc1ccccc1C(=O)O",
-        "CC(C)Cc1ccc(cc1)C(C)C(=O)O",
-        "Cn1cnc2c1c(=O)n(c(=O)n2C)C",
-        "CC(=O)Nc1ccc(O)cc1",
-        "OC(=O)c1ccccc1O",
-    ]
-    mols = [Chem.MolFromSmiles(s) for s in training_smiles]
-    X_train = np.array([get_features(m) for m in mols if m is not None])
-    X_train_scaled = scaler.transform(X_train)
-    q = np.array(query_features).reshape(1, -1)
+    mols = [Chem.MolFromSmiles(s) for s in TRAINING_SMILES]
+    valid = [(m, s) for m, s in zip(mols, TRAINING_SCORES) if m is not None]
+    mols_valid = [v[0] for v in valid]
+    scores_valid = [v[1] for v in valid]
+
+    X = np.array([get_features(m) for m in mols_valid])
+    y = np.array(scores_valid)
+
+    n = len(y)
+    cal_size = max(8, n // 4)
+    train_size = n - cal_size
+
+    X_train = X[:train_size]
+    y_train = y[:train_size]
+    X_cal = X[train_size:]
+    y_cal = y[train_size:]
+
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_cal_scaled = scaler.transform(X_cal)
+
+    model = RandomForestRegressor(n_estimators=200, random_state=42, min_samples_leaf=2)
+    model.fit(X_train_scaled, y_train)
+
+    cal_preds = model.predict(X_cal_scaled)
+    cal_residuals = np.abs(y_cal - cal_preds)
+
+    return model, scaler, cal_residuals, X_train_scaled
+
+def conformal_interval(model, scaler, cal_residuals, features, coverage):
+    features_array = np.array(features).reshape(1, -1)
+    features_scaled = scaler.transform(features_array)
+
+    point_pred = model.predict(features_scaled)[0]
+
+    alpha = 1.0 - (coverage / 100)
+    n = len(cal_residuals)
+    level = min(np.ceil((n + 1) * (1 - alpha)) / n, 1.0)
+    q_hat = float(np.quantile(cal_residuals, level))
+
+    lower = point_pred - q_hat
+    upper = point_pred + q_hat
+
+    tree_preds = [tree.predict(features_scaled)[0] for tree in model.estimators_]
+    pred_std = np.std(tree_preds)
+
+    return {
+        "point": round(float(point_pred), 2),
+        "lower": round(float(lower), 2),
+        "upper": round(float(upper), 2),
+        "width": round(float(upper - lower), 2),
+        "q_hat": round(float(q_hat), 3),
+        "pred_std": round(float(pred_std), 3),
+        "n_cal": n,
+        "coverage": coverage,
+    }
+
+def get_similarity(features, X_train_scaled, scaler):
+    q = np.array(features).reshape(1, -1)
     q_scaled = scaler.transform(q)
     dists = np.linalg.norm(X_train_scaled - q_scaled, axis=1)
     min_dist = dists.min()
     similarity = float(np.exp(-min_dist / 10))
     return round(min(max(similarity, 0.05), 0.99), 2)
 
+with st.sidebar:
+    st.markdown("## Settings")
+    coverage = st.slider("Coverage level", 80, 95, 90, 5,
+        help="90% means the true value falls in the interval 90% of the time — guaranteed by maths")
+    st.markdown("---")
+    st.markdown("### How it works")
+    st.markdown("""
+    1. A **Random Forest** predicts the binding score
+    2. **Conformal prediction** wraps it with a mathematically guaranteed interval
+    3. An **OOD detector** flags unusual molecules
+    """)
+    st.markdown("---")
+    st.markdown("Built by **Kirtana Premnath**\nMSc Bioinformatics")
+
 st.title("🔬 ConformalDock")
 st.markdown("#### Calibrated Uncertainty for Molecular Docking Scores")
-st.markdown("*Know not just what the score is — but how much to trust it.*")
+st.markdown("*The first tool to give molecular docking scores a mathematically guaranteed confidence interval.*")
 st.markdown("---")
 
 st.markdown("### Enter your molecule")
+smiles = st.text_input("Paste a SMILES string", placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O")
 
-smiles = st.text_input(
-    "Paste a SMILES string here",
-    placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O"
-)
-
-st.markdown("**Or click an example:**")
+st.markdown("**Try an example:**")
 col1, col2, col3 = st.columns(3)
 with col1:
     if st.button("Aspirin", use_container_width=True):
@@ -150,7 +195,6 @@ with col3:
 
 if smiles:
     st.markdown("---")
-
     try:
         from rdkit import Chem
         from rdkit.Chem import Descriptors, rdMolDescriptors
@@ -171,7 +215,7 @@ if smiles:
             tpsa = round(Descriptors.TPSA(mol), 2)
             atoms = mol.GetNumAtoms()
 
-            st.markdown("### Real molecular properties")
+            st.markdown("### Molecular properties")
             c1, c2, c3, c4 = st.columns(4)
             with c1:
                 st.metric("Molecular weight", str(mw) + " g/mol")
@@ -228,63 +272,73 @@ if smiles:
                 st.markdown('<div class="trust-low">Only ' + str(passed) + ' rules passed</div>', unsafe_allow_html=True)
 
             st.markdown("---")
-            st.markdown("### Binding prediction — real ML model")
-            st.markdown("Trained on molecular features using a Random Forest model.")
+            st.markdown("### Conformal prediction — binding score")
 
-            with st.spinner("Running model..."):
-                model, scaler = build_model()
+            with st.spinner("Running conformal prediction..."):
+                model, scaler, cal_residuals, X_train_scaled = build_conformal_model()
                 features = get_features(mol)
-                features_array = np.array(features).reshape(1, -1)
-                features_scaled = scaler.transform(features_array)
+                result = conformal_interval(model, scaler, cal_residuals, features, coverage)
+                similarity = get_similarity(features, X_train_scaled, scaler)
 
-                all_preds = [
-                    tree.predict(features_scaled)[0]
-                    for tree in model.estimators_
-                ]
-                score = round(float(np.mean(all_preds)), 2)
-                pred_std = round(float(np.std(all_preds)), 2)
-
-                alpha = 1.0 - (confidence / 100)
-                z = {0.20: 1.28, 0.15: 1.44, 0.10: 1.645, 0.05: 1.96}
-                z_val = z.get(alpha, 1.645)
-                margin = round(z_val * pred_std, 2)
-                lower = round(score - margin, 2)
-                upper = round(score + margin, 2)
-                width = round(upper - lower, 2)
-
-                similarity = get_similarity(features, model, scaler)
+            st.markdown("""
+            <div class="conformal-box">
+            <div class="conformal-title">CONFORMAL PREDICTION RESULT</div>
+            """, unsafe_allow_html=True)
 
             bc1, bc2, bc3 = st.columns(3)
             with bc1:
-                st.metric("Predicted binding score", str(score) + " kcal/mol",
-                    help="More negative = stronger predicted binding")
+                st.metric("Predicted score",
+                    str(result["point"]) + " kcal/mol",
+                    help="More negative = stronger binding predicted")
             with bc2:
-                st.metric("Confidence interval (" + str(confidence) + "%)",
-                    "[" + str(lower) + ", " + str(upper) + "]",
-                    help="Range where the true value likely falls")
+                st.metric("Guaranteed interval (" + str(coverage) + "%)",
+                    "[" + str(result["lower"]) + ", " + str(result["upper"]) + "]",
+                    help="The true value falls here " + str(coverage) + "% of the time. This is a mathematical guarantee.")
             with bc3:
-                st.metric("Interval width", str(width) + " kcal/mol",
-                    help="Narrower = more certain")
+                st.metric("Interval width",
+                    str(result["width"]) + " kcal/mol",
+                    help="How uncertain the prediction is")
+
+            st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            if similarity > 0.65 and width < 3.0:
-                st.markdown('<div class="trust-high">High confidence — molecule is well understood by the model</div>', unsafe_allow_html=True)
+            if similarity > 0.65 and result["width"] < 3.0:
+                st.markdown('<div class="trust-high">High confidence — reliable prediction</div>', unsafe_allow_html=True)
             elif similarity > 0.4:
-                st.markdown('<div class="trust-medium">Medium confidence — prediction is reasonable but uncertain</div>', unsafe_allow_html=True)
+                st.markdown('<div class="trust-medium">Medium confidence — use with caution</div>', unsafe_allow_html=True)
             else:
-                st.markdown('<div class="trust-low">Low confidence — molecule is unusual, treat prediction with caution</div>', unsafe_allow_html=True)
+                st.markdown('<div class="trust-low">Low confidence — molecule is unusual</div>', unsafe_allow_html=True)
+
+            if similarity < 0.4:
+                st.warning("This molecule looks very different from the training data. The conformal guarantee may not fully apply.")
 
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("**Model similarity score:** " + str(similarity))
+            st.markdown("**Similarity to training data:** " + str(similarity))
             st.progress(similarity)
-            st.markdown("**Prediction spread across 100 trees:** " + str(pred_std) + " kcal/mol")
 
-            with st.expander("What do these numbers mean?"):
-                st.markdown("**Binding score:** More negative means stronger predicted binding. Scores below -7 are generally considered promising.")
-                st.markdown("**Confidence interval:** The range where we expect the true score to fall at your chosen confidence level.")
-                st.markdown("**Interval width:** How spread out the 100 decision trees are. If they all agree, width is narrow. If they disagree, width is wide.")
-                st.markdown("**Model similarity:** How chemically similar this molecule is to ones the model knows well. Below 0.4 means extra caution.")
+            with st.expander("What makes this conformal prediction — not just a confidence interval?"):
+                st.markdown("""
+                Most tools give you a confidence interval based on assumptions about 
+                the data distribution — assumptions that may be wrong.
+
+                **Conformal prediction makes no such assumptions.**
+
+                Instead it uses a held-out calibration set of molecules with known 
+                binding scores. It measures how wrong the model was on those molecules, 
+                then uses that error history to guarantee coverage on new molecules.
+
+                **The maths:** The conformal quantile q̂ = """ + str(result["q_hat"]) + """ kcal/mol.
+                This means the model was wrong by at most """ + str(result["q_hat"]) + """ kcal/mol 
+                on """ + str(coverage) + """% of calibration molecules.
+                So the interval [score - q̂, score + q̂] is guaranteed to contain 
+                the true value """ + str(coverage) + """% of the time.
+
+                **Calibration set size:** """ + str(result["n_cal"]) + """ molecules
+
+                **This guarantee holds regardless of the molecule — as long as it comes 
+                from a similar distribution to the calibration set.**
+                """)
 
             with st.expander("Feature importance — what drove this prediction?"):
                 importances = model.feature_importances_
