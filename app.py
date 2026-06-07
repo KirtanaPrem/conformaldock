@@ -59,10 +59,7 @@ section[data-testid="stSidebar"] .stMarkdown h2 { color: #fafaf9; }
 .search-name { color: #fafaf9; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
 .search-smiles { color: #57534e; font-size: 9px; font-family: monospace; word-break: break-all; }
 .citation-box { background: #292524; border: 1px solid #44403c; border-radius: 8px; padding: 10px 14px; margin-top: 16px; color: #57534e; font-size: 10px; line-height: 1.7; }
-.result-table { width: 100%; border-collapse: collapse; }
-.result-table th { background: #292524; color: #78716c; font-size: 10px; padding: 8px 10px; text-align: left; border-bottom: 1px solid #44403c; letter-spacing: 1px; text-transform: uppercase; }
-.result-table td { color: #a8a29e; font-size: 11px; padding: 8px 10px; border-bottom: 1px solid #292524; }
-.result-table tr:hover td { background: #292524; color: #fafaf9; }
+.compound-btn { width: 100%; background: #292524; border: 1px solid #44403c; border-radius: 6px; padding: 8px 12px; color: #a8a29e; font-size: 11px; text-align: left; margin-bottom: 4px; cursor: pointer; display: flex; justify-content: space-between; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -127,8 +124,7 @@ def search_pubchem_all(name):
         url = (
             "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
             + requests.utils.quote(name.strip())
-            + "/property/CanonicalSMILES,IUPACName,MolecularFormula,"
-            "MolecularWeight,IsomericSMILES/JSON"
+            + "/property/CanonicalSMILES,IUPACName,MolecularFormula,MolecularWeight/JSON"
         )
         headers = {"Accept": "application/json", "User-Agent": "ConformalDock/1.0"}
         resp = requests.get(url, timeout=15, headers=headers)
@@ -136,23 +132,21 @@ def search_pubchem_all(name):
             return []
         compounds = resp.json()["PropertyTable"]["Properties"]
         results = []
-        seen_formulas = set()
+        seen = set()
         for c in compounds:
-            smiles = c.get("CanonicalSMILES") or c.get("IsomericSMILES") or ""
+            smiles = c.get("CanonicalSMILES", "")
             formula = c.get("MolecularFormula", "")
             iupac = c.get("IUPACName", "")
             mw = c.get("MolecularWeight", "")
             cid = c.get("CID", "")
-            if not smiles:
+            if not smiles or formula in seen:
                 continue
-            if formula in seen_formulas:
-                continue
-            seen_formulas.add(formula)
+            seen.add(formula)
             results.append({
                 "CID": str(cid),
                 "Name": iupac.title() if iupac else name.title(),
                 "Formula": formula,
-                "MW": str(mw),
+                "MW (g/mol)": str(mw),
                 "smiles": smiles,
             })
         return results
@@ -164,9 +158,6 @@ def lookup_local(name):
     if key in MOLECULE_SMILES:
         smiles, display_name, formula = MOLECULE_SMILES[key]
         return {"smiles": smiles, "name": display_name, "formula": formula}
-    for k, (smiles, display_name, formula) in MOLECULE_SMILES.items():
-        if key in k or key in display_name.lower():
-            return {"smiles": smiles, "name": display_name, "formula": formula}
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -258,9 +249,8 @@ def get_similarity(features, X_train_s, scaler):
     dists = np.linalg.norm(X_train_s - q, axis=1)
     return round(min(max(float(np.exp(-dists.min() / 15)), 0.05), 0.99), 2)
 
-def show_prediction(mol, smiles, model, scaler, cal_residuals, X_train_s, coverage):
+def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
     from rdkit.Chem import Descriptors, rdMolDescriptors
-    st.success("Molecule loaded successfully!")
     mw = round(Descriptors.MolWt(mol), 2)
     logp = round(Descriptors.MolLogP(mol), 2)
     hbd = rdMolDescriptors.CalcNumHBD(mol)
@@ -269,6 +259,11 @@ def show_prediction(mol, smiles, model, scaler, cal_residuals, X_train_s, covera
     rotbonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
     tpsa = round(Descriptors.TPSA(mol), 2)
     atoms = mol.GetNumAtoms()
+
+    if atoms > 100:
+        st.warning("This molecule is very large (" + str(atoms) + " atoms). ConformalDock is optimised for small drug-like molecules under 100 atoms. Results may be less reliable.")
+
+    st.success("Molecule loaded — running prediction...")
 
     st.markdown('<div class="section-label">Molecular properties</div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
@@ -426,7 +421,7 @@ with tab1:
             mol = Chem.MolFromSmiles(smiles_input)
             if mol:
                 st.markdown("---")
-                show_prediction(mol, smiles_input, model, scaler, cal_residuals, X_train_s, coverage)
+                show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage)
             else:
                 st.error("Could not parse SMILES — please check and try again.")
 
@@ -434,87 +429,104 @@ with tab1:
         st.markdown("**Quick examples:**")
         ec1, ec2, ec3, ec4, ec5 = st.columns(5)
         with ec1:
-            if st.button("Aspirin", use_container_width=True):
-                st.session_state["search_query"] = "aspirin"
+            asp = st.button("Aspirin", use_container_width=True)
         with ec2:
-            if st.button("Caffeine", use_container_width=True):
-                st.session_state["search_query"] = "caffeine"
+            caf = st.button("Caffeine", use_container_width=True)
         with ec3:
-            if st.button("Morphine", use_container_width=True):
-                st.session_state["search_query"] = "morphine"
+            mor = st.button("Morphine", use_container_width=True)
         with ec4:
-            if st.button("Dopamine", use_container_width=True):
-                st.session_state["search_query"] = "dopamine"
+            dop = st.button("Dopamine", use_container_width=True)
         with ec5:
-            if st.button("THC", use_container_width=True):
-                st.session_state["search_query"] = "thc"
+            thc = st.button("THC", use_container_width=True)
 
-        default_query = st.session_state.get("search_query", "")
+        if asp:
+            st.session_state["active_smiles"] = MOLECULE_SMILES["aspirin"][0]
+            st.session_state["active_name"] = "Aspirin"
+            st.session_state["pubchem_results"] = []
+            st.session_state["last_query"] = ""
+        if caf:
+            st.session_state["active_smiles"] = MOLECULE_SMILES["caffeine"][0]
+            st.session_state["active_name"] = "Caffeine"
+            st.session_state["pubchem_results"] = []
+            st.session_state["last_query"] = ""
+        if mor:
+            st.session_state["active_smiles"] = MOLECULE_SMILES["morphine"][0]
+            st.session_state["active_name"] = "Morphine"
+            st.session_state["pubchem_results"] = []
+            st.session_state["last_query"] = ""
+        if dop:
+            st.session_state["active_smiles"] = MOLECULE_SMILES["dopamine"][0]
+            st.session_state["active_name"] = "Dopamine"
+            st.session_state["pubchem_results"] = []
+            st.session_state["last_query"] = ""
+        if thc:
+            st.session_state["active_smiles"] = MOLECULE_SMILES["thc"][0]
+            st.session_state["active_name"] = "THC"
+            st.session_state["pubchem_results"] = []
+            st.session_state["last_query"] = ""
+
         drug_name = st.text_input(
             "Type any drug, molecule, or compound name",
-            value=default_query,
-            placeholder="e.g. penicillin, cannabidiol, serotonin, sildenafil..."
+            placeholder="e.g. penicillin, cannabidiol, sildenafil, serotonin..."
         )
 
-        if drug_name:
+        if drug_name and drug_name != st.session_state.get("last_query", ""):
+            st.session_state["last_query"] = drug_name
+            st.session_state["active_smiles"] = ""
+            st.session_state["active_name"] = ""
+
             local = lookup_local(drug_name)
             if local:
-                st.markdown(
-                    '<div class="search-found">'
-                    '<div class="search-name">Found: ' + local["name"] + '</div>'
-                    '<div class="search-smiles">Formula: ' + local["formula"] + '</div>'
-                    '</div>',
-                    unsafe_allow_html=True
-                )
-                from rdkit import Chem
-                mol = Chem.MolFromSmiles(local["smiles"])
-                if mol:
-                    st.markdown("---")
-                    show_prediction(mol, local["smiles"], model, scaler, cal_residuals, X_train_s, coverage)
+                st.session_state["active_smiles"] = local["smiles"]
+                st.session_state["active_name"] = local["name"]
+                st.session_state["pubchem_results"] = []
             else:
-                with st.spinner("Searching PubChem for all compounds matching " + drug_name + "..."):
+                with st.spinner("Searching PubChem for " + drug_name + "..."):
                     results = search_pubchem_all(drug_name)
+                st.session_state["pubchem_results"] = results
 
-                if not results:
-                    st.error("No compounds found for \"" + drug_name + "\". Try a different name or spelling.")
-                else:
-                    st.markdown(
-                        '<div class="section-label">Found ' + str(len(results)) + ' compounds — click a row to select</div>',
-                        unsafe_allow_html=True
-                    )
+        results = st.session_state.get("pubchem_results", [])
+        active_smiles = st.session_state.get("active_smiles", "")
+        active_name = st.session_state.get("active_name", "")
 
-                    display_df = pd.DataFrame([{
-                        "PubChem CID": r["CID"],
-                        "Name": r["Name"],
-                        "Formula": r["Formula"],
-                        "Mol. Weight": r["MW"],
-                    } for r in results])
+        if results and not active_smiles:
+            st.markdown(
+                '<div class="section-label">Found ' + str(len(results)) + ' compounds — select one below</div>',
+                unsafe_allow_html=True
+            )
+            for i, r in enumerate(results):
+                col_a, col_b, col_c, col_d = st.columns([3, 2, 1, 1])
+                with col_a:
+                    st.markdown("<span style='color:#a8a29e;font-size:11px'>" + r["Name"] + "</span>", unsafe_allow_html=True)
+                with col_b:
+                    st.markdown("<span style='color:#57534e;font-size:11px'>" + r["Formula"] + "</span>", unsafe_allow_html=True)
+                with col_c:
+                    st.markdown("<span style='color:#57534e;font-size:11px'>" + r["MW (g/mol)"] + " g/mol</span>", unsafe_allow_html=True)
+                with col_d:
+                    if st.button("Select", key="sel_" + str(i), use_container_width=True):
+                        st.session_state["active_smiles"] = r["smiles"]
+                        st.session_state["active_name"] = r["Name"]
+                        st.session_state["pubchem_results"] = []
+                        st.rerun()
 
-                    selected = st.dataframe(
-                        display_df,
-                        use_container_width=True,
-                        hide_index=True,
-                        on_select="rerun",
-                        selection_mode="single-row",
-                    )
+        elif drug_name and not active_smiles and not results and st.session_state.get("last_query") == drug_name:
+            st.error("No compounds found for \"" + drug_name + "\". Try a different spelling.")
 
-                    if selected and selected.selection.rows:
-                        row_idx = selected.selection.rows[0]
-                        chosen = results[row_idx]
-                        st.markdown(
-                            '<div class="search-found">'
-                            '<div class="search-name">Selected: ' + chosen["Name"] + ' (' + chosen["Formula"] + ')</div>'
-                            '<div class="search-smiles">CID: ' + chosen["CID"] + ' · SMILES: ' + chosen["smiles"][:80] + '...</div>'
-                            '</div>',
-                            unsafe_allow_html=True
-                        )
-                        from rdkit import Chem
-                        mol = Chem.MolFromSmiles(chosen["smiles"])
-                        if mol:
-                            st.markdown("---")
-                            show_prediction(mol, chosen["smiles"], model, scaler, cal_residuals, X_train_s, coverage)
-                        else:
-                            st.error("Could not parse this compound's structure. Try selecting a different one.")
+        if active_smiles:
+            st.markdown(
+                '<div class="search-found">'
+                '<div class="search-name">Selected: ' + active_name + '</div>'
+                '<div class="search-smiles">' + active_smiles[:80] + ('...' if len(active_smiles) > 80 else '') + '</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+            from rdkit import Chem
+            mol = Chem.MolFromSmiles(active_smiles)
+            if mol:
+                st.markdown("---")
+                show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage)
+            else:
+                st.error("Could not parse this compound's structure.")
 
 with tab2:
     st.markdown("## Benchmark results")
