@@ -59,6 +59,10 @@ section[data-testid="stSidebar"] .stMarkdown h2 { color: #fafaf9; }
 .search-name { color: #fafaf9; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
 .search-smiles { color: #57534e; font-size: 9px; font-family: monospace; word-break: break-all; }
 .citation-box { background: #292524; border: 1px solid #44403c; border-radius: 8px; padding: 10px 14px; margin-top: 16px; color: #57534e; font-size: 10px; line-height: 1.7; }
+.result-table { width: 100%; border-collapse: collapse; }
+.result-table th { background: #292524; color: #78716c; font-size: 10px; padding: 8px 10px; text-align: left; border-bottom: 1px solid #44403c; letter-spacing: 1px; text-transform: uppercase; }
+.result-table td { color: #a8a29e; font-size: 11px; padding: 8px 10px; border-bottom: 1px solid #292524; }
+.result-table tr:hover td { background: #292524; color: #fafaf9; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -69,46 +73,24 @@ MOLECULE_SMILES = {
     "morphine": ("CN1CCC23c4c(ccc(O)c4OC2(O)C=CC1C3)O", "Morphine", "C17H19NO3"),
     "paracetamol": ("CC(=O)Nc1ccc(O)cc1", "Paracetamol", "C8H9NO2"),
     "acetaminophen": ("CC(=O)Nc1ccc(O)cc1", "Acetaminophen", "C8H9NO2"),
-    "penicillin": ("CC1(C)SC2C(NC1=O)C(=O)N2Cc1ccccc1", "Penicillin G", "C16H18N2O4S"),
-    "metformin": ("CN(C)C(=N)NC(N)=N", "Metformin", "C4H11N5"),
-    "atorvastatin": ("CC(C)c1c(C(=O)Nc2ccccc2F)c(-c2ccccc2)c(-c2ccc(F)cc2)n1CCC(O)CC(O)CC(=O)O", "Atorvastatin", "C33H35FN2O5"),
-    "omeprazole": ("COc1ccc2nc([nH]c2c1)S(=O)Cc1ncc(C)c(OC)c1C", "Omeprazole", "C17H19N3O3S"),
-    "sildenafil": ("CCCC1=NN(C)C(=O)c2c1[nH]c1ccc(cc1c2=O)S(=O)(=O)N1CCN(CC1)C", "Sildenafil", "C22H30N6O4S"),
     "marijuana": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC (Cannabis)", "C21H30O2"),
     "thc": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC", "C21H30O2"),
-    "tetrahydrocannabinol": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "Tetrahydrocannabinol", "C21H30O2"),
     "cocaine": ("COC(=O)C1CC(OC(=O)c2ccccc2)CC1N", "Cocaine", "C17H21NO4"),
-    "heroin": ("CC(=O)OC1CC(=CC2CC(OC(C)=O)C(=CC12)N(C)C)NC", "Heroin", "C21H23NO5"),
     "alcohol": ("CCO", "Ethanol", "C2H6O"),
     "ethanol": ("CCO", "Ethanol", "C2H6O"),
-    "glucose": ("OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O", "Glucose", "C6H12O6"),
     "dopamine": ("NCCc1ccc(O)c(O)c1", "Dopamine", "C8H11NO2"),
     "serotonin": ("NCCc1c[nH]c2ccc(O)cc12", "Serotonin", "C10H12N2O"),
-    "adrenaline": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Adrenaline", "C9H13NO3"),
-    "epinephrine": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Epinephrine", "C9H13NO3"),
-    "melatonin": ("COc1ccc2[nH]cc(CCNC(C)=O)c2c1", "Melatonin", "C13H16N2O2"),
     "nicotine": ("CN1CCCC1c1cccnc1", "Nicotine", "C10H14N2"),
-    "codeine": ("COc1ccc2CC3N(C)CCC4(c1c2O3)c1ccccc1O4", "Codeine", "C18H21NO3"),
-    "diazepam": ("CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21", "Diazepam (Valium)", "C16H13ClN2O"),
-    "valium": ("CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21", "Diazepam (Valium)", "C16H13ClN2O"),
-    "ketamine": ("CN1CC(=O)c2ccccc2C1=O", "Ketamine", "C13H16ClNO"),
-    "mdma": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA (Ecstasy)", "C11H15NO2"),
-    "ecstasy": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA (Ecstasy)", "C11H15NO2"),
+    "melatonin": ("COc1ccc2[nH]cc(CCNC(C)=O)c2c1", "Melatonin", "C13H16N2O2"),
+    "adrenaline": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Adrenaline", "C9H13NO3"),
+    "mdma": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA", "C11H15NO2"),
     "lsd": ("CCN(CC)C(=O)C1CN(C)C2Cc3c[nH]c4cccc(c34)C2=C1", "LSD", "C20H25N3O"),
     "warfarin": ("CC(=O)CC(c1ccccc1)c1c(O)c2ccccc2oc1=O", "Warfarin", "C19H16O4"),
-    "methadone": ("CCC(=O)C(CC(C)N(C)C)(c1ccccc1)c1ccccc1", "Methadone", "C21H27NO"),
-    "lithium": ("[Li+]", "Lithium", "Li"),
-    "insulin": ("CCC(C)C1NC(=O)C(Cc2ccccc2)NC(=O)C", "Insulin fragment", "C11H13N2O3"),
-    "vitamin c": ("OC(=O)C1OC(=O)C(O)=C1O", "Vitamin C", "C6H8O6"),
+    "metformin": ("CN(C)C(=N)NC(N)=N", "Metformin", "C4H11N5"),
     "cholesterol": ("CC(C)CCCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C", "Cholesterol", "C27H46O"),
     "testosterone": ("CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C", "Testosterone", "C19H28O2"),
-    "estrogen": ("CC12CCC3c4ccc(O)cc4CCC3C1CCC2O", "Estradiol", "C18H24O2"),
     "cortisol": ("CC12CCC3C(C1CCC2(C(=O)CO)O)CCC4=CC(=O)CCC34C", "Cortisol", "C21H30O5"),
-    "penicillin g": ("CC1(C)SC2C(NC1=O)C(=O)N2Cc1ccccc1", "Penicillin G", "C16H18N2O4S"),
-    "amoxicillin": ("CC1(C)SC2C(NC1=O)C(=O)N2C(C(=O)O)c1ccc(N)cc1", "Amoxicillin", "C16H19N3O5S"),
-    "chloroquine": ("CCN(CC)CCCC(C)Nc1ccnc2cc(Cl)ccc12", "Chloroquine", "C18H26ClN3"),
-    "remdesivir": ("CCC(CC)COC(=O)c1ccc(N)nc1NC(=O)C1OC(n2cnc3c(N)ncnc32)C(F)(F)C1F", "Remdesivir", "C27H35FN6O8P"),
-    "acetylsalicylic acid": ("CC(=O)Oc1ccccc1C(=O)O", "Aspirin", "C9H8O4"),
+    "glucose": ("OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O", "Glucose", "C6H12O6"),
 }
 
 def get_features(mol):
@@ -140,34 +122,51 @@ def get_feature_names():
         "Radical electrons", "Valence electrons", "Amide bonds", "Heterocycles"
     ]
 
-def lookup_molecule(name):
-    key = name.strip().lower()
-    if key in MOLECULE_SMILES:
-        smiles, display_name, formula = MOLECULE_SMILES[key]
-        return {"smiles": smiles, "name": display_name, "formula": formula, "mw": ""}
-    for k, (smiles, display_name, formula) in MOLECULE_SMILES.items():
-        if key in k or k in display_name.lower():
-            return {"smiles": smiles, "name": display_name, "formula": formula, "mw": ""}
+def search_pubchem_all(name):
     try:
         url = (
             "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
-            + requests.utils.quote(key)
-            + "/property/CanonicalSMILES,IUPACName,MolecularFormula,MolecularWeight/JSON"
+            + requests.utils.quote(name.strip())
+            + "/property/CanonicalSMILES,IUPACName,MolecularFormula,"
+            "MolecularWeight,IsomericSMILES/JSON"
         )
         headers = {"Accept": "application/json", "User-Agent": "ConformalDock/1.0"}
-        resp = requests.get(url, timeout=12, headers=headers)
-        if resp.status_code == 200:
-            props = resp.json()["PropertyTable"]["Properties"][0]
-            smiles = props.get("CanonicalSMILES") or props.get("IsomericSMILES") or ""
-            if smiles:
-                return {
-                    "smiles": smiles,
-                    "name": props.get("IUPACName", name).title(),
-                    "formula": props.get("MolecularFormula", ""),
-                    "mw": str(props.get("MolecularWeight", "")),
-                }
+        resp = requests.get(url, timeout=15, headers=headers)
+        if resp.status_code != 200:
+            return []
+        compounds = resp.json()["PropertyTable"]["Properties"]
+        results = []
+        seen_formulas = set()
+        for c in compounds:
+            smiles = c.get("CanonicalSMILES") or c.get("IsomericSMILES") or ""
+            formula = c.get("MolecularFormula", "")
+            iupac = c.get("IUPACName", "")
+            mw = c.get("MolecularWeight", "")
+            cid = c.get("CID", "")
+            if not smiles:
+                continue
+            if formula in seen_formulas:
+                continue
+            seen_formulas.add(formula)
+            results.append({
+                "CID": str(cid),
+                "Name": iupac.title() if iupac else name.title(),
+                "Formula": formula,
+                "MW": str(mw),
+                "smiles": smiles,
+            })
+        return results
     except:
-        pass
+        return []
+
+def lookup_local(name):
+    key = name.strip().lower()
+    if key in MOLECULE_SMILES:
+        smiles, display_name, formula = MOLECULE_SMILES[key]
+        return {"smiles": smiles, "name": display_name, "formula": formula}
+    for k, (smiles, display_name, formula) in MOLECULE_SMILES.items():
+        if key in k or key in display_name.lower():
+            return {"smiles": smiles, "name": display_name, "formula": formula}
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -259,17 +258,137 @@ def get_similarity(features, X_train_s, scaler):
     dists = np.linalg.norm(X_train_s - q, axis=1)
     return round(min(max(float(np.exp(-dists.min() / 15)), 0.05), 0.99), 2)
 
+def show_prediction(mol, smiles, model, scaler, cal_residuals, X_train_s, coverage):
+    from rdkit.Chem import Descriptors, rdMolDescriptors
+    st.success("Molecule loaded successfully!")
+    mw = round(Descriptors.MolWt(mol), 2)
+    logp = round(Descriptors.MolLogP(mol), 2)
+    hbd = rdMolDescriptors.CalcNumHBD(mol)
+    hba = rdMolDescriptors.CalcNumHBA(mol)
+    rings = rdMolDescriptors.CalcNumRings(mol)
+    rotbonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
+    tpsa = round(Descriptors.TPSA(mol), 2)
+    atoms = mol.GetNumAtoms()
+
+    st.markdown('<div class="section-label">Molecular properties</div>', unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown('<div class="prop-card"><div class="prop-label">Molecular weight</div><div class="prop-value">' + str(mw) + '<span class="prop-unit"> g/mol</span></div></div>', unsafe_allow_html=True)
+    with c2:
+        st.markdown('<div class="prop-card"><div class="prop-label">LogP</div><div class="prop-value">' + str(logp) + '</div></div>', unsafe_allow_html=True)
+    with c3:
+        st.markdown('<div class="prop-card"><div class="prop-label">H-bond donors</div><div class="prop-value">' + str(hbd) + '</div></div>', unsafe_allow_html=True)
+    with c4:
+        st.markdown('<div class="prop-card"><div class="prop-label">H-bond acceptors</div><div class="prop-value">' + str(hba) + '</div></div>', unsafe_allow_html=True)
+
+    c5, c6, c7, c8 = st.columns(4)
+    with c5:
+        st.markdown('<div class="prop-card"><div class="prop-label">Rings</div><div class="prop-value">' + str(rings) + '</div></div>', unsafe_allow_html=True)
+    with c6:
+        st.markdown('<div class="prop-card"><div class="prop-label">Rotatable bonds</div><div class="prop-value">' + str(rotbonds) + '</div></div>', unsafe_allow_html=True)
+    with c7:
+        st.markdown('<div class="prop-card"><div class="prop-label">TPSA</div><div class="prop-value">' + str(tpsa) + '</div></div>', unsafe_allow_html=True)
+    with c8:
+        st.markdown('<div class="prop-card"><div class="prop-label">Atoms</div><div class="prop-value">' + str(atoms) + '</div></div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="section-label">Lipinski drug-likeness</div>', unsafe_allow_html=True)
+    rule1 = mw <= 500
+    rule2 = logp <= 5
+    rule3 = hbd <= 5
+    rule4 = hba <= 10
+    passed = sum([rule1, rule2, rule3, rule4])
+
+    lc1, lc2 = st.columns(2)
+    with lc1:
+        d1 = "lip-dot-pass" if rule1 else "lip-dot-fail"
+        d2 = "lip-dot-pass" if rule2 else "lip-dot-fail"
+        st.markdown('<div class="lip-row"><div class="' + d1 + '"></div><div class="lip-text">Molecular weight ≤ 500</div><div class="lip-val">' + str(mw) + '</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="lip-row"><div class="' + d2 + '"></div><div class="lip-text">LogP ≤ 5</div><div class="lip-val">' + str(logp) + '</div></div>', unsafe_allow_html=True)
+    with lc2:
+        d3 = "lip-dot-pass" if rule3 else "lip-dot-fail"
+        d4 = "lip-dot-pass" if rule4 else "lip-dot-fail"
+        st.markdown('<div class="lip-row"><div class="' + d3 + '"></div><div class="lip-text">H-bond donors ≤ 5</div><div class="lip-val">' + str(hbd) + '</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="lip-row"><div class="' + d4 + '"></div><div class="lip-text">H-bond acceptors ≤ 10</div><div class="lip-val">' + str(hba) + '</div></div>', unsafe_allow_html=True)
+
+    if passed == 4:
+        st.markdown('<div class="verdict-pass">All 4 rules passed — good oral drug candidate</div>', unsafe_allow_html=True)
+    elif passed == 3:
+        st.markdown('<div class="verdict-pass">3 of 4 rules passed — borderline oral drug candidate</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="verdict-fail">Only ' + str(passed) + ' of 4 rules passed — may not be orally bioavailable</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="section-label">Conformal prediction result</div>', unsafe_allow_html=True)
+    features = get_features(mol)
+    result_cp = conformal_predict(model, scaler, cal_residuals, features, coverage)
+    similarity = get_similarity(features, X_train_s, scaler)
+    sim_pct = int(similarity * 100)
+
+    rc1, rc2, rc3 = st.columns(3)
+    with rc1:
+        st.markdown('<div class="result-card"><div class="result-label">Predicted binding score</div><div class="result-value">' + str(result_cp["point"]) + ' kcal/mol</div></div>', unsafe_allow_html=True)
+    with rc2:
+        st.markdown('<div class="result-card highlight"><div class="result-label">Guaranteed interval (' + str(coverage) + '%)</div><div class="result-value accent">[' + str(result_cp["lower"]) + ', ' + str(result_cp["upper"]) + ']</div></div>', unsafe_allow_html=True)
+    with rc3:
+        st.markdown('<div class="result-card"><div class="result-label">Interval width</div><div class="result-value">' + str(result_cp["width"]) + ' kcal/mol</div></div>', unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown('<div style="display:flex;justify-content:space-between;"><span class="conf-label">Similarity to training data</span><span class="conf-val">' + str(sim_pct) + '%</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="bar-track"><div class="bar-fill-orange" style="width:' + str(sim_pct) + '%"></div></div>', unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if similarity > 0.6 and result_cp["width"] < 5.0:
+        st.markdown('<div class="verdict-high"><div class="vdot-g"></div>High confidence — molecule is well represented in training data</div>', unsafe_allow_html=True)
+    elif similarity > 0.35:
+        st.markdown('<div class="verdict-medium"><div class="vdot-y"></div>Medium confidence — prediction is reasonable, treat with some caution</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="verdict-low"><div class="vdot-r"></div>Low confidence — molecule is unusual, prediction less reliable</div>', unsafe_allow_html=True)
+
+    with st.expander("What is conformal prediction?"):
+        st.markdown("""
+Conformal prediction converts any ML model into one with a **mathematically guaranteed** interval.
+
+Instead of assuming the data follows a specific distribution, it uses a held-out calibration set
+to measure how wrong the model typically is, then sets interval width to guarantee coverage.
+
+**Conformal quantile:** """ + str(result_cp["q_hat"]) + """ kcal/mol · **Calibration set:** """ + str(result_cp["n_cal"]) + """ molecules
+        """)
+
+    with st.expander("Feature importance — what drove this prediction?"):
+        importances = model.feature_importances_
+        names = get_feature_names()
+        pairs = sorted(zip(names, importances), key=lambda x: x[1], reverse=True)[:8]
+        for name, imp in pairs:
+            pct = round(imp * 100, 1)
+            st.markdown(
+                '<div class="feat-row">'
+                '<div class="feat-name">' + name + '</div>'
+                '<div class="feat-track"><div class="feat-fill" style="width:' + str(pct) + '%"></div></div>'
+                '<div class="feat-pct">' + str(pct) + '%</div>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+    st.markdown(
+        '<div class="citation-box">'
+        'Kirtana Premnath (2026). ConformalDock: Calibrated Uncertainty Quantification for '
+        'Molecular Docking Scores using Conformal Prediction. '
+        'MSc Bioinformatics and Data Science, Sathyabama Institute of Science and Technology, Chennai. '
+        'conformaldock-kirtana.streamlit.app'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
 with st.sidebar:
     st.markdown("## ⚙️ Settings")
     coverage = st.slider("Coverage level", 80, 95, 90, 5)
     st.markdown("---")
     st.markdown("### How it works")
     st.markdown("""
-1. Search any drug by name
-2. **ChEMBL** provides real binding data
-3. **Gradient Boosting** predicts score
-4. **Conformal prediction** guarantees interval
-5. **OOD detector** flags unusual molecules
+1. Search any molecule by name
+2. Choose exact compound from results
+3. **ChEMBL** provides real binding data
+4. **Gradient Boosting** predicts score
+5. **Conformal prediction** guarantees interval
     """)
     st.markdown("---")
     st.markdown("**Kirtana Premnath**\nMSc Bioinformatics & Data Science")
@@ -297,188 +416,105 @@ with tab1:
         label_visibility="collapsed"
     )
 
-    smiles = ""
-
-    if search_mode == "Search by name":
-        drug_name = st.text_input(
-            "Type any drug or molecule name",
-            placeholder="e.g. aspirin, caffeine, marijuana, morphine, cocaine, dopamine..."
+    if search_mode == "Paste SMILES directly":
+        smiles_input = st.text_input(
+            "Paste SMILES string",
+            placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O"
         )
+        if smiles_input:
+            from rdkit import Chem
+            mol = Chem.MolFromSmiles(smiles_input)
+            if mol:
+                st.markdown("---")
+                show_prediction(mol, smiles_input, model, scaler, cal_residuals, X_train_s, coverage)
+            else:
+                st.error("Could not parse SMILES — please check and try again.")
 
+    else:
         st.markdown("**Quick examples:**")
         ec1, ec2, ec3, ec4, ec5 = st.columns(5)
         with ec1:
             if st.button("Aspirin", use_container_width=True):
-                drug_name = "aspirin"
+                st.session_state["search_query"] = "aspirin"
         with ec2:
-            if st.button("Ibuprofen", use_container_width=True):
-                drug_name = "ibuprofen"
-        with ec3:
             if st.button("Caffeine", use_container_width=True):
-                drug_name = "caffeine"
-        with ec4:
+                st.session_state["search_query"] = "caffeine"
+        with ec3:
             if st.button("Morphine", use_container_width=True):
-                drug_name = "morphine"
+                st.session_state["search_query"] = "morphine"
+        with ec4:
+            if st.button("Dopamine", use_container_width=True):
+                st.session_state["search_query"] = "dopamine"
         with ec5:
             if st.button("THC", use_container_width=True):
-                drug_name = "thc"
+                st.session_state["search_query"] = "thc"
+
+        default_query = st.session_state.get("search_query", "")
+        drug_name = st.text_input(
+            "Type any drug, molecule, or compound name",
+            value=default_query,
+            placeholder="e.g. penicillin, cannabidiol, serotonin, sildenafil..."
+        )
 
         if drug_name:
-            with st.spinner("Looking up " + drug_name + "..."):
-                pub_result = lookup_molecule(drug_name)
-            if pub_result and pub_result["smiles"]:
-                smiles = pub_result["smiles"]
-                display_name = pub_result["name"]
-                formula = pub_result["formula"]
-                short_smiles = smiles[:80] + ("..." if len(smiles) > 80 else "")
+            local = lookup_local(drug_name)
+            if local:
                 st.markdown(
                     '<div class="search-found">'
-                    '<div class="search-name">Found: ' + display_name + '</div>'
-                    '<div class="search-smiles">Formula: ' + formula + ' · SMILES: ' + short_smiles + '</div>'
+                    '<div class="search-name">Found: ' + local["name"] + '</div>'
+                    '<div class="search-smiles">Formula: ' + local["formula"] + '</div>'
                     '</div>',
                     unsafe_allow_html=True
                 )
+                from rdkit import Chem
+                mol = Chem.MolFromSmiles(local["smiles"])
+                if mol:
+                    st.markdown("---")
+                    show_prediction(mol, local["smiles"], model, scaler, cal_residuals, X_train_s, coverage)
             else:
-                st.error("Could not find \"" + drug_name + "\" — try another name or spelling. Examples: aspirin, cocaine, dopamine, serotonin, nicotine")
-    else:
-        smiles = st.text_input(
-            "Paste SMILES string",
-            placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O"
-        )
+                with st.spinner("Searching PubChem for all compounds matching " + drug_name + "..."):
+                    results = search_pubchem_all(drug_name)
 
-    if smiles:
-        st.markdown("---")
-        try:
-            from rdkit import Chem
-            from rdkit.Chem import Descriptors, rdMolDescriptors
-            mol = Chem.MolFromSmiles(smiles)
-
-            if mol is None:
-                st.error("Could not parse this molecule structure.")
-            else:
-                st.success("Molecule loaded successfully!")
-
-                mw = round(Descriptors.MolWt(mol), 2)
-                logp = round(Descriptors.MolLogP(mol), 2)
-                hbd = rdMolDescriptors.CalcNumHBD(mol)
-                hba = rdMolDescriptors.CalcNumHBA(mol)
-                rings = rdMolDescriptors.CalcNumRings(mol)
-                rotbonds = rdMolDescriptors.CalcNumRotatableBonds(mol)
-                tpsa = round(Descriptors.TPSA(mol), 2)
-                atoms = mol.GetNumAtoms()
-
-                st.markdown('<div class="section-label">Molecular properties</div>', unsafe_allow_html=True)
-                c1, c2, c3, c4 = st.columns(4)
-                with c1:
-                    st.markdown('<div class="prop-card"><div class="prop-label">Molecular weight</div><div class="prop-value">' + str(mw) + '<span class="prop-unit"> g/mol</span></div></div>', unsafe_allow_html=True)
-                with c2:
-                    st.markdown('<div class="prop-card"><div class="prop-label">LogP</div><div class="prop-value">' + str(logp) + '</div></div>', unsafe_allow_html=True)
-                with c3:
-                    st.markdown('<div class="prop-card"><div class="prop-label">H-bond donors</div><div class="prop-value">' + str(hbd) + '</div></div>', unsafe_allow_html=True)
-                with c4:
-                    st.markdown('<div class="prop-card"><div class="prop-label">H-bond acceptors</div><div class="prop-value">' + str(hba) + '</div></div>', unsafe_allow_html=True)
-
-                c5, c6, c7, c8 = st.columns(4)
-                with c5:
-                    st.markdown('<div class="prop-card"><div class="prop-label">Rings</div><div class="prop-value">' + str(rings) + '</div></div>', unsafe_allow_html=True)
-                with c6:
-                    st.markdown('<div class="prop-card"><div class="prop-label">Rotatable bonds</div><div class="prop-value">' + str(rotbonds) + '</div></div>', unsafe_allow_html=True)
-                with c7:
-                    st.markdown('<div class="prop-card"><div class="prop-label">TPSA</div><div class="prop-value">' + str(tpsa) + '</div></div>', unsafe_allow_html=True)
-                with c8:
-                    st.markdown('<div class="prop-card"><div class="prop-label">Atoms</div><div class="prop-value">' + str(atoms) + '</div></div>', unsafe_allow_html=True)
-
-                st.markdown('<div class="section-label">Lipinski drug-likeness</div>', unsafe_allow_html=True)
-                rule1 = mw <= 500
-                rule2 = logp <= 5
-                rule3 = hbd <= 5
-                rule4 = hba <= 10
-                passed = sum([rule1, rule2, rule3, rule4])
-
-                lc1, lc2 = st.columns(2)
-                with lc1:
-                    d1 = "lip-dot-pass" if rule1 else "lip-dot-fail"
-                    d2 = "lip-dot-pass" if rule2 else "lip-dot-fail"
-                    st.markdown('<div class="lip-row"><div class="' + d1 + '"></div><div class="lip-text">Molecular weight ≤ 500</div><div class="lip-val">' + str(mw) + '</div></div>', unsafe_allow_html=True)
-                    st.markdown('<div class="lip-row"><div class="' + d2 + '"></div><div class="lip-text">LogP ≤ 5</div><div class="lip-val">' + str(logp) + '</div></div>', unsafe_allow_html=True)
-                with lc2:
-                    d3 = "lip-dot-pass" if rule3 else "lip-dot-fail"
-                    d4 = "lip-dot-pass" if rule4 else "lip-dot-fail"
-                    st.markdown('<div class="lip-row"><div class="' + d3 + '"></div><div class="lip-text">H-bond donors ≤ 5</div><div class="lip-val">' + str(hbd) + '</div></div>', unsafe_allow_html=True)
-                    st.markdown('<div class="lip-row"><div class="' + d4 + '"></div><div class="lip-text">H-bond acceptors ≤ 10</div><div class="lip-val">' + str(hba) + '</div></div>', unsafe_allow_html=True)
-
-                if passed == 4:
-                    st.markdown('<div class="verdict-pass">All 4 rules passed — good oral drug candidate</div>', unsafe_allow_html=True)
-                elif passed == 3:
-                    st.markdown('<div class="verdict-pass">3 of 4 rules passed — borderline oral drug candidate</div>', unsafe_allow_html=True)
+                if not results:
+                    st.error("No compounds found for \"" + drug_name + "\". Try a different name or spelling.")
                 else:
-                    st.markdown('<div class="verdict-fail">Only ' + str(passed) + ' of 4 rules passed — may not be orally bioavailable</div>', unsafe_allow_html=True)
+                    st.markdown(
+                        '<div class="section-label">Found ' + str(len(results)) + ' compounds — click a row to select</div>',
+                        unsafe_allow_html=True
+                    )
 
-                st.markdown('<div class="section-label">Conformal prediction result</div>', unsafe_allow_html=True)
+                    display_df = pd.DataFrame([{
+                        "PubChem CID": r["CID"],
+                        "Name": r["Name"],
+                        "Formula": r["Formula"],
+                        "Mol. Weight": r["MW"],
+                    } for r in results])
 
-                features = get_features(mol)
-                result_cp = conformal_predict(model, scaler, cal_residuals, features, coverage)
-                similarity = get_similarity(features, X_train_s, scaler)
-                sim_pct = int(similarity * 100)
+                    selected = st.dataframe(
+                        display_df,
+                        use_container_width=True,
+                        hide_index=True,
+                        on_select="rerun",
+                        selection_mode="single-row",
+                    )
 
-                rc1, rc2, rc3 = st.columns(3)
-                with rc1:
-                    st.markdown('<div class="result-card"><div class="result-label">Predicted binding score</div><div class="result-value">' + str(result_cp["point"]) + ' kcal/mol</div></div>', unsafe_allow_html=True)
-                with rc2:
-                    st.markdown('<div class="result-card highlight"><div class="result-label">Guaranteed interval (' + str(coverage) + '%)</div><div class="result-value accent">[' + str(result_cp["lower"]) + ', ' + str(result_cp["upper"]) + ']</div></div>', unsafe_allow_html=True)
-                with rc3:
-                    st.markdown('<div class="result-card"><div class="result-label">Interval width</div><div class="result-value">' + str(result_cp["width"]) + ' kcal/mol</div></div>', unsafe_allow_html=True)
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.markdown('<div style="display:flex;justify-content:space-between;"><span class="conf-label">Similarity to training data</span><span class="conf-val">' + str(sim_pct) + '%</span></div>', unsafe_allow_html=True)
-                st.markdown('<div class="bar-track"><div class="bar-fill-orange" style="width:' + str(sim_pct) + '%"></div></div>', unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-
-                if similarity > 0.6 and result_cp["width"] < 5.0:
-                    st.markdown('<div class="verdict-high"><div class="vdot-g"></div>High confidence — molecule is well represented in training data</div>', unsafe_allow_html=True)
-                elif similarity > 0.35:
-                    st.markdown('<div class="verdict-medium"><div class="vdot-y"></div>Medium confidence — prediction is reasonable, treat with some caution</div>', unsafe_allow_html=True)
-                else:
-                    st.markdown('<div class="verdict-low"><div class="vdot-r"></div>Low confidence — molecule is unusual, prediction less reliable</div>', unsafe_allow_html=True)
-
-                with st.expander("What is conformal prediction?"):
-                    st.markdown("""
-Conformal prediction converts any ML model into one with a **mathematically guaranteed** interval.
-
-Instead of assuming the data follows a specific distribution, it uses a held-out calibration set
-to measure how wrong the model typically is, then sets interval width to guarantee coverage.
-
-**Conformal quantile:** """ + str(result_cp["q_hat"]) + """ kcal/mol · **Calibration set:** """ + str(result_cp["n_cal"]) + """ molecules
-                    """)
-
-                with st.expander("Feature importance — what drove this prediction?"):
-                    importances = model.feature_importances_
-                    names = get_feature_names()
-                    pairs = sorted(zip(names, importances), key=lambda x: x[1], reverse=True)[:8]
-                    for name, imp in pairs:
-                        pct = round(imp * 100, 1)
+                    if selected and selected.selection.rows:
+                        row_idx = selected.selection.rows[0]
+                        chosen = results[row_idx]
                         st.markdown(
-                            '<div class="feat-row">'
-                            '<div class="feat-name">' + name + '</div>'
-                            '<div class="feat-track"><div class="feat-fill" style="width:' + str(pct) + '%"></div></div>'
-                            '<div class="feat-pct">' + str(pct) + '%</div>'
+                            '<div class="search-found">'
+                            '<div class="search-name">Selected: ' + chosen["Name"] + ' (' + chosen["Formula"] + ')</div>'
+                            '<div class="search-smiles">CID: ' + chosen["CID"] + ' · SMILES: ' + chosen["smiles"][:80] + '...</div>'
                             '</div>',
                             unsafe_allow_html=True
                         )
-
-                st.markdown(
-                    '<div class="citation-box">'
-                    'Kirtana Premnath (2026). ConformalDock: Calibrated Uncertainty Quantification for '
-                    'Molecular Docking Scores using Conformal Prediction. '
-                    'MSc Bioinformatics and Data Science, Sathyabama Institute of Science and Technology, Chennai. '
-                    'conformaldock-kirtana.streamlit.app'
-                    '</div>',
-                    unsafe_allow_html=True
-                )
-
-        except Exception as e:
-            st.error("Something went wrong reading this molecule.")
-            st.write(str(e))
+                        from rdkit import Chem
+                        mol = Chem.MolFromSmiles(chosen["smiles"])
+                        if mol:
+                            st.markdown("---")
+                            show_prediction(mol, chosen["smiles"], model, scaler, cal_residuals, X_train_s, coverage)
+                        else:
+                            st.error("Could not parse this compound's structure. Try selecting a different one.")
 
 with tab2:
     st.markdown("## Benchmark results")
@@ -519,7 +555,7 @@ confidence interval using conformal prediction theory, trained on real
 experimental IC50 binding data from ChEMBL.
 
 ### What makes this different
-- Search any drug by name — no chemistry knowledge required
+- Search any molecule by name — see all matching compounds and pick the exact one
 - Trained on real ChEMBL IC50 measurements, not simulated data
 - Conformal prediction gives a valid coverage guarantee, not a heuristic
 - OOD detection tells you when the molecule is too unusual to trust
