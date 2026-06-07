@@ -113,34 +113,29 @@ MOLECULE_SMILES = {
     "chloroquine": ("CCN(CC)CCCC(C)Nc1ccnc2cc(Cl)ccc12", "Chloroquine"),
     "remdesivir": ("CCC(CC)COC(=O)c1ccc(N)nc1NC(=O)C1OC(n2cnc3c(N)ncnc32)C(F)(F)C1F", "Remdesivir"),
     "dexamethasone": ("CC1CC2C3CCC4=CC(=O)CC(C)(C4C3(F)C(O)C2(C)C1=O)C(=O)CO", "Dexamethasone"),
-    "imatinib": ("Cc1ccc(NC(=O)c2ccc(CN3CCN(CC3)C)cc2)cc1Nc1nccc(-c2cccnc2)n1", "Imatinib (Gleevec)"),
+    "imatinib": ("Cc1ccc(NC(=O)c2ccc(CN3CCN(CC3)C)cc2)cc1Nc1nccc(-c2cccnc2)n1", "Imatinib"),
     "tamoxifen": ("CCC(=C(c1ccccc1)c1ccc(OCCN(C)C)cc1)c1ccccc1", "Tamoxifen"),
     "acetylsalicylic acid": ("CC(=O)Oc1ccccc1C(=O)O", "Aspirin"),
+    "acetylcholine": ("CC(=O)OCC[N+](C)(C)C", "Acetylcholine"),
+    "norepinephrine": ("NCC(O)c1ccc(O)c(O)c1", "Norepinephrine"),
+    "histamine": ("NCCc1c[nH]cn1", "Histamine"),
+    "glutamate": ("N[C@@H](CCC(=O)O)C(=O)O", "Glutamate"),
+    "gaba": ("NCCCC(=O)O", "GABA"),
+    "adenosine": ("Nc1ncnc2c1ncn2C1OC(CO)C(O)C1O", "Adenosine"),
+    "chloramphenicol": ("OC(C(Cl)Cl)C(NC(=O)c1ccc([N+](=O)[O-])cc1)CO", "Chloramphenicol"),
+    "tetracycline": ("CN(C)C1C(O)=C(C(N)=O)C(=O)C2(O)C(O)=C3C(=O)c4c(O)cccc4C3(C)C12", "Tetracycline"),
+    "streptomycin": ("CNC1CC(OC2OC(CO)C(O)C(O)C2NC)C(O)C(OC2OC(C)CC(N)C2O)C1=O", "Streptomycin"),
+    "vancomycin": ("CC1OC(OC2C(Cl)c3cc4cc(OC5OC(CO)C(O)C(O)C5O)c(O)c(Cl)c4oc3-c3cc(OC4OC(C)C(N)C(O)C4O)ccc3C(=O)NC(C(=O)NC3C(=O)NC(c4ccc(O)cc4)C(=O)NC(C(=O)N2)CC(N)=O)C(O)C3O)CC(NC(=O)C(N)c2ccc(O)c(Cl)c2)C1=O", "Vancomycin"),
+    "quinine": ("COc1ccc2nccc(C(O)C3CC4CCN3CC4C=C)c2c1", "Quinine"),
 }
 
 def resolve_name_to_smiles(name):
-    from rdkit.Chem import MolFromSmiles
-    from rdkit.Chem.Draw import rdMolDraw2D
-    try:
-        from rdkit.Chem import MolToSmiles
-        from rdkit.Chem.rdmolfiles import MolFromMolBlock
-        import subprocess
-        result = subprocess.run(
-            ["python", "-c",
-             "from rdkit.Chem import MolFromSmiles; "
-             "from rdkit.Chem.Draw import rdMolDraw2D; "
-             "print('ok')"],
-            capture_output=True, timeout=5
-        )
-    except:
-        pass
-
     try:
         import urllib.parse
-        encoded = urllib.parse.quote(name)
+        encoded = urllib.parse.quote(name.strip())
         url = "https://cactus.nci.nih.gov/chemical/structure/" + encoded + "/smiles"
         resp = requests.get(url, timeout=8,
-                           headers={"User-Agent": "ConformalDock/1.0"})
+                            headers={"User-Agent": "ConformalDock/1.0"})
         if resp.status_code == 200:
             smiles = resp.text.strip()
             if smiles and not smiles.startswith("<") and len(smiles) > 2:
@@ -151,11 +146,11 @@ def resolve_name_to_smiles(name):
     try:
         url2 = (
             "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
-            + requests.utils.quote(name)
+            + requests.utils.quote(name.strip())
             + "/property/CanonicalSMILES/JSON"
         )
         resp2 = requests.get(url2, timeout=10,
-                            headers={"User-Agent": "ConformalDock/1.0"})
+                             headers={"User-Agent": "ConformalDock/1.0"})
         if resp2.status_code == 200:
             smiles = resp2.json()["PropertyTable"]["Properties"][0]["CanonicalSMILES"]
             if smiles:
@@ -295,11 +290,16 @@ def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
     atoms = mol.GetNumAtoms()
 
     if atoms > 100:
-        st.warning("This molecule is very large (" + str(atoms) + " atoms). ConformalDock is optimised for small drug-like molecules. Results may be less reliable.")
+        st.warning(
+            "This molecule is very large (" + str(atoms) + " atoms). "
+            "ConformalDock is optimised for small drug-like molecules under 100 atoms. "
+            "The prediction will still run but confidence may be lower."
+        )
 
     st.success("Molecule loaded — running prediction...")
 
-    st.markdown('<div class="section-label">Molecular properties</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Molecular properties</div>',
+                unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
         st.markdown('<div class="prop-card"><div class="prop-label">Molecular weight</div><div class="prop-value">' + str(mw) + '<span class="prop-unit"> g/mol</span></div></div>', unsafe_allow_html=True)
@@ -320,7 +320,8 @@ def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
     with c8:
         st.markdown('<div class="prop-card"><div class="prop-label">Atoms</div><div class="prop-value">' + str(atoms) + '</div></div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="section-label">Lipinski drug-likeness</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Lipinski drug-likeness</div>',
+                unsafe_allow_html=True)
     rule1 = mw <= 500
     rule2 = logp <= 5
     rule3 = hbd <= 5
@@ -342,11 +343,12 @@ def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
     if passed == 4:
         st.markdown('<div class="verdict-pass">All 4 rules passed — good oral drug candidate</div>', unsafe_allow_html=True)
     elif passed == 3:
-        st.markdown('<div class="verdict-pass">3 of 4 rules passed — borderline oral drug candidate</div>', unsafe_allow_html=True)
+        st.markdown('<div class="verdict-pass">3 of 4 rules passed — borderline drug candidate</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="verdict-fail">Only ' + str(passed) + ' of 4 rules passed — may not be orally bioavailable</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="section-label">Conformal prediction result</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Conformal prediction result</div>',
+                unsafe_allow_html=True)
     features = get_features(mol)
     result_cp = conformal_predict(model, scaler, cal_residuals, features, coverage)
     similarity = get_similarity(features, X_train_s, scaler)
@@ -368,7 +370,7 @@ def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
     if similarity > 0.6 and result_cp["width"] < 5.0:
         st.markdown('<div class="verdict-high"><div class="vdot-g"></div>High confidence — molecule is well represented in training data</div>', unsafe_allow_html=True)
     elif similarity > 0.35:
-        st.markdown('<div class="verdict-medium"><div class="vdot-y"></div>Medium confidence — prediction is reasonable, treat with some caution</div>', unsafe_allow_html=True)
+        st.markdown('<div class="verdict-medium"><div class="vdot-y"></div>Medium confidence — treat with some caution</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="verdict-low"><div class="vdot-r"></div>Low confidence — molecule is unusual, prediction less reliable</div>', unsafe_allow_html=True)
 
@@ -422,7 +424,8 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Kirtana Premnath**\nMSc Bioinformatics & Data Science")
 
-st.markdown('<div class="app-title">🔬 <span>Conformal</span>Dock</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-title">🔬 <span>Conformal</span>Dock</div>',
+            unsafe_allow_html=True)
 st.markdown('<div class="app-sub">Calibrated Uncertainty for Molecular Docking Scores · Trained on real experimental data from ChEMBL</div>', unsafe_allow_html=True)
 st.markdown('<div class="data-badge"><div class="dot-green"></div> Model trained on real ChEMBL experimental measurements</div>', unsafe_allow_html=True)
 
@@ -436,7 +439,8 @@ if model is None:
 tab1, tab2, tab3 = st.tabs(["🔍 Predict", "📊 Benchmark", "📄 About"])
 
 with tab1:
-    st.markdown('<div class="section-label">Search molecule</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Search molecule</div>',
+                unsafe_allow_html=True)
 
     search_mode = st.radio(
         "Input method",
@@ -476,27 +480,32 @@ with tab1:
         if asp:
             st.session_state["active_smiles"] = MOLECULE_SMILES["aspirin"][0]
             st.session_state["active_name"] = "Aspirin"
+            st.session_state["source"] = "local"
             st.session_state["last_query"] = ""
         if caf:
             st.session_state["active_smiles"] = MOLECULE_SMILES["caffeine"][0]
             st.session_state["active_name"] = "Caffeine"
+            st.session_state["source"] = "local"
             st.session_state["last_query"] = ""
         if mor:
             st.session_state["active_smiles"] = MOLECULE_SMILES["morphine"][0]
             st.session_state["active_name"] = "Morphine"
+            st.session_state["source"] = "local"
             st.session_state["last_query"] = ""
         if dop:
             st.session_state["active_smiles"] = MOLECULE_SMILES["dopamine"][0]
             st.session_state["active_name"] = "Dopamine"
+            st.session_state["source"] = "local"
             st.session_state["last_query"] = ""
         if thc:
             st.session_state["active_smiles"] = MOLECULE_SMILES["thc"][0]
             st.session_state["active_name"] = "THC"
+            st.session_state["source"] = "local"
             st.session_state["last_query"] = ""
 
         drug_name = st.text_input(
             "Type any drug, molecule, or compound name",
-            placeholder="e.g. penicillin, cannabidiol, sildenafil, serotonin, chitosan..."
+            placeholder="e.g. penicillin, acetylcholine, sildenafil, cannabigerol..."
         )
 
         if drug_name and drug_name != st.session_state.get("last_query", ""):
@@ -519,8 +528,6 @@ with tab1:
                     st.session_state["active_name"] = drug_name.title()
                     st.session_state["source"] = source
                 else:
-                    st.session_state["active_smiles"] = ""
-                    st.session_state["active_name"] = ""
                     st.session_state["source"] = "not_found"
 
         active_smiles = st.session_state.get("active_smiles", "")
@@ -530,7 +537,8 @@ with tab1:
         if source == "not_found" and st.session_state.get("last_query"):
             st.error(
                 "Could not find \"" + st.session_state["last_query"] + "\". "
-                "Try a different name, spelling, or use the SMILES option above."
+                "This molecule may not be in any public database, or try a different spelling. "
+                "You can also switch to 'Paste SMILES directly' if you have the structure."
             )
         elif active_smiles:
             source_label = ""
@@ -552,7 +560,7 @@ with tab1:
                 st.markdown("---")
                 show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage)
             else:
-                st.error("Could not parse this compound's structure. Try searching by SMILES directly.")
+                st.error("Could not parse this compound. Try searching by SMILES directly.")
 
 with tab2:
     st.markdown("## Benchmark results")
@@ -568,7 +576,12 @@ with tab2:
         st.metric("Features", "16")
     st.markdown("### Method comparison")
     comparison = pd.DataFrame({
-        "Method": ["AutoDock Vina", "Random Forest", "RF + heuristic interval", "ConformalDock (this work)"],
+        "Method": [
+            "AutoDock Vina",
+            "Random Forest",
+            "RF + heuristic interval",
+            "ConformalDock (this work)"
+        ],
         "Real experimental data": ["No", "Depends", "Depends", "Yes — ChEMBL"],
         "Uncertainty estimate": ["No", "No", "Heuristic", "Guaranteed"],
         "OOD detection": ["No", "No", "No", "Yes"],
@@ -576,7 +589,10 @@ with tab2:
         "Free & open": ["Yes", "Yes", "Yes", "Yes"],
     })
     st.dataframe(comparison, use_container_width=True)
-    st.info("Full validation on CASF-2016 (285 complexes) in preparation. Target journal: Journal of Chemical Information and Modeling.")
+    st.info(
+        "Full validation on CASF-2016 (285 complexes) in preparation. "
+        "Target journal: Journal of Chemical Information and Modeling."
+    )
 
 with tab3:
     st.markdown("## About ConformalDock")
@@ -594,7 +610,7 @@ experimental IC50 binding data from ChEMBL.
 
 ### Molecule search
 Name resolution uses three layers in order:
-1. **Local dictionary** — instant results for 50+ common drugs
+1. **Local dictionary** — instant results for 60+ common drugs and compounds
 2. **NCI Cactus** — the National Cancer Institute's free chemical name resolver
 3. **PubChem** — the world's largest open chemistry database
 
@@ -612,4 +628,9 @@ conformaldock-kirtana.streamlit.app*
     """)
 
 st.markdown("---")
-st.markdown("<p style='text-align:center;color:#44403c;font-size:11px;'>ConformalDock · Kirtana Premnath · MSc Bioinformatics and Data Science · 2026</p>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align:center;color:#44403c;font-size:11px;'>"
+    "ConformalDock · Kirtana Premnath · MSc Bioinformatics and Data Science · 2026"
+    "</p>",
+    unsafe_allow_html=True
+)
