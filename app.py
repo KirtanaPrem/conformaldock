@@ -59,36 +59,111 @@ section[data-testid="stSidebar"] .stMarkdown h2 { color: #fafaf9; }
 .search-name { color: #fafaf9; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
 .search-smiles { color: #57534e; font-size: 9px; font-family: monospace; word-break: break-all; }
 .citation-box { background: #292524; border: 1px solid #44403c; border-radius: 8px; padding: 10px 14px; margin-top: 16px; color: #57534e; font-size: 10px; line-height: 1.7; }
-.compound-btn { width: 100%; background: #292524; border: 1px solid #44403c; border-radius: 6px; padding: 8px 12px; color: #a8a29e; font-size: 11px; text-align: left; margin-bottom: 4px; cursor: pointer; display: flex; justify-content: space-between; }
+.source-tag { display: inline-block; background: #1c1917; border: 1px solid #44403c; border-radius: 4px; padding: 2px 7px; color: #78716c; font-size: 9px; margin-left: 6px; }
 </style>
 """, unsafe_allow_html=True)
 
 MOLECULE_SMILES = {
-    "aspirin": ("CC(=O)Oc1ccccc1C(=O)O", "Aspirin", "C9H8O4"),
-    "ibuprofen": ("CC(C)Cc1ccc(cc1)C(C)C(=O)O", "Ibuprofen", "C13H18O2"),
-    "caffeine": ("Cn1cnc2c1c(=O)n(c(=O)n2C)C", "Caffeine", "C8H10N4O2"),
-    "morphine": ("CN1CCC23c4c(ccc(O)c4OC2(O)C=CC1C3)O", "Morphine", "C17H19NO3"),
-    "paracetamol": ("CC(=O)Nc1ccc(O)cc1", "Paracetamol", "C8H9NO2"),
-    "acetaminophen": ("CC(=O)Nc1ccc(O)cc1", "Acetaminophen", "C8H9NO2"),
-    "marijuana": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC (Cannabis)", "C21H30O2"),
-    "thc": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC", "C21H30O2"),
-    "cocaine": ("COC(=O)C1CC(OC(=O)c2ccccc2)CC1N", "Cocaine", "C17H21NO4"),
-    "alcohol": ("CCO", "Ethanol", "C2H6O"),
-    "ethanol": ("CCO", "Ethanol", "C2H6O"),
-    "dopamine": ("NCCc1ccc(O)c(O)c1", "Dopamine", "C8H11NO2"),
-    "serotonin": ("NCCc1c[nH]c2ccc(O)cc12", "Serotonin", "C10H12N2O"),
-    "nicotine": ("CN1CCCC1c1cccnc1", "Nicotine", "C10H14N2"),
-    "melatonin": ("COc1ccc2[nH]cc(CCNC(C)=O)c2c1", "Melatonin", "C13H16N2O2"),
-    "adrenaline": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Adrenaline", "C9H13NO3"),
-    "mdma": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA", "C11H15NO2"),
-    "lsd": ("CCN(CC)C(=O)C1CN(C)C2Cc3c[nH]c4cccc(c34)C2=C1", "LSD", "C20H25N3O"),
-    "warfarin": ("CC(=O)CC(c1ccccc1)c1c(O)c2ccccc2oc1=O", "Warfarin", "C19H16O4"),
-    "metformin": ("CN(C)C(=N)NC(N)=N", "Metformin", "C4H11N5"),
-    "cholesterol": ("CC(C)CCCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C", "Cholesterol", "C27H46O"),
-    "testosterone": ("CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C", "Testosterone", "C19H28O2"),
-    "cortisol": ("CC12CCC3C(C1CCC2(C(=O)CO)O)CCC4=CC(=O)CCC34C", "Cortisol", "C21H30O5"),
-    "glucose": ("OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O", "Glucose", "C6H12O6"),
+    "aspirin": ("CC(=O)Oc1ccccc1C(=O)O", "Aspirin"),
+    "ibuprofen": ("CC(C)Cc1ccc(cc1)C(C)C(=O)O", "Ibuprofen"),
+    "caffeine": ("Cn1cnc2c1c(=O)n(c(=O)n2C)C", "Caffeine"),
+    "morphine": ("CN1CCC23c4c(ccc(O)c4OC2(O)C=CC1C3)O", "Morphine"),
+    "paracetamol": ("CC(=O)Nc1ccc(O)cc1", "Paracetamol"),
+    "acetaminophen": ("CC(=O)Nc1ccc(O)cc1", "Acetaminophen"),
+    "tylenol": ("CC(=O)Nc1ccc(O)cc1", "Tylenol"),
+    "advil": ("CC(C)Cc1ccc(cc1)C(C)C(=O)O", "Advil"),
+    "panadol": ("CC(=O)Nc1ccc(O)cc1", "Panadol"),
+    "marijuana": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC (Cannabis)"),
+    "thc": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "THC"),
+    "cbd": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "Cannabidiol"),
+    "cannabidiol": ("CCCCCc1cc(O)c2c(c1)OC(C)(CCC=C(C)C)c1ccc(O)cc1-2", "Cannabidiol"),
+    "cocaine": ("COC(=O)C1CC(OC(=O)c2ccccc2)CC1N", "Cocaine"),
+    "heroin": ("CC(=O)OC1CC(=CC2CC(OC(C)=O)C(=CC12)NC)NC", "Heroin"),
+    "alcohol": ("CCO", "Ethanol"),
+    "ethanol": ("CCO", "Ethanol"),
+    "dopamine": ("NCCc1ccc(O)c(O)c1", "Dopamine"),
+    "serotonin": ("NCCc1c[nH]c2ccc(O)cc12", "Serotonin"),
+    "nicotine": ("CN1CCCC1c1cccnc1", "Nicotine"),
+    "melatonin": ("COc1ccc2[nH]cc(CCNC(C)=O)c2c1", "Melatonin"),
+    "adrenaline": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Adrenaline"),
+    "epinephrine": ("CNC(C(O)c1ccc(O)c(O)c1)O", "Epinephrine"),
+    "mdma": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA"),
+    "ecstasy": ("CNC(C)Cc1ccc2c(c1)OCO2", "MDMA (Ecstasy)"),
+    "lsd": ("CCN(CC)C(=O)C1CN(C)C2Cc3c[nH]c4cccc(c34)C2=C1", "LSD"),
+    "warfarin": ("CC(=O)CC(c1ccccc1)c1c(O)c2ccccc2oc1=O", "Warfarin"),
+    "metformin": ("CN(C)C(=N)NC(N)=N", "Metformin"),
+    "cholesterol": ("CC(C)CCCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C", "Cholesterol"),
+    "testosterone": ("CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C", "Testosterone"),
+    "cortisol": ("CC12CCC3C(C1CCC2(C(=O)CO)O)CCC4=CC(=O)CCC34C", "Cortisol"),
+    "glucose": ("OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O", "Glucose"),
+    "penicillin": ("CC1(C)SC2C(NC1=O)C(=O)N2Cc1ccccc1", "Penicillin G"),
+    "penicillin g": ("CC1(C)SC2C(NC1=O)C(=O)N2Cc1ccccc1", "Penicillin G"),
+    "amoxicillin": ("CC1(C)SC2C(NC1=O)C(=O)N2C(C(=O)O)c1ccc(N)cc1", "Amoxicillin"),
+    "ampicillin": ("CC1(C)SC2C(NC1=O)C(=O)N2C(C(=O)O)c1ccccc1", "Ampicillin"),
+    "sildenafil": ("CCCC1=NN(C)C(=O)c2c1[nH]c1ccc(cc1c2=O)S(=O)(=O)N1CCN(CC1)C", "Sildenafil (Viagra)"),
+    "viagra": ("CCCC1=NN(C)C(=O)c2c1[nH]c1ccc(cc1c2=O)S(=O)(=O)N1CCN(CC1)C", "Sildenafil (Viagra)"),
+    "atorvastatin": ("CC(C)c1c(C(=O)Nc2ccccc2F)c(-c2ccccc2)c(-c2ccc(F)cc2)n1CCC(O)CC(O)CC(=O)O", "Atorvastatin"),
+    "methadone": ("CCC(=O)C(CC(C)N(C)C)(c1ccccc1)c1ccccc1", "Methadone"),
+    "codeine": ("COc1ccc2CC3N(C)CCC4c1c2O3c1ccccc14", "Codeine"),
+    "diazepam": ("CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21", "Diazepam (Valium)"),
+    "valium": ("CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21", "Valium"),
+    "ketamine": ("CN1CC(=O)c2ccccc2C1=O", "Ketamine"),
+    "vitamin c": ("OC(=O)C1OC(=O)C(O)=C1O", "Vitamin C"),
+    "ascorbic acid": ("OC(=O)C1OC(=O)C(O)=C1O", "Ascorbic Acid"),
+    "chloroquine": ("CCN(CC)CCCC(C)Nc1ccnc2cc(Cl)ccc12", "Chloroquine"),
+    "remdesivir": ("CCC(CC)COC(=O)c1ccc(N)nc1NC(=O)C1OC(n2cnc3c(N)ncnc32)C(F)(F)C1F", "Remdesivir"),
+    "dexamethasone": ("CC1CC2C3CCC4=CC(=O)CC(C)(C4C3(F)C(O)C2(C)C1=O)C(=O)CO", "Dexamethasone"),
+    "imatinib": ("Cc1ccc(NC(=O)c2ccc(CN3CCN(CC3)C)cc2)cc1Nc1nccc(-c2cccnc2)n1", "Imatinib (Gleevec)"),
+    "tamoxifen": ("CCC(=C(c1ccccc1)c1ccc(OCCN(C)C)cc1)c1ccccc1", "Tamoxifen"),
+    "acetylsalicylic acid": ("CC(=O)Oc1ccccc1C(=O)O", "Aspirin"),
 }
+
+def resolve_name_to_smiles(name):
+    from rdkit.Chem import MolFromSmiles
+    from rdkit.Chem.Draw import rdMolDraw2D
+    try:
+        from rdkit.Chem import MolToSmiles
+        from rdkit.Chem.rdmolfiles import MolFromMolBlock
+        import subprocess
+        result = subprocess.run(
+            ["python", "-c",
+             "from rdkit.Chem import MolFromSmiles; "
+             "from rdkit.Chem.Draw import rdMolDraw2D; "
+             "print('ok')"],
+            capture_output=True, timeout=5
+        )
+    except:
+        pass
+
+    try:
+        import urllib.parse
+        encoded = urllib.parse.quote(name)
+        url = "https://cactus.nci.nih.gov/chemical/structure/" + encoded + "/smiles"
+        resp = requests.get(url, timeout=8,
+                           headers={"User-Agent": "ConformalDock/1.0"})
+        if resp.status_code == 200:
+            smiles = resp.text.strip()
+            if smiles and not smiles.startswith("<") and len(smiles) > 2:
+                return smiles, "NCI Cactus"
+    except:
+        pass
+
+    try:
+        url2 = (
+            "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
+            + requests.utils.quote(name)
+            + "/property/CanonicalSMILES/JSON"
+        )
+        resp2 = requests.get(url2, timeout=10,
+                            headers={"User-Agent": "ConformalDock/1.0"})
+        if resp2.status_code == 200:
+            smiles = resp2.json()["PropertyTable"]["Properties"][0]["CanonicalSMILES"]
+            if smiles:
+                return smiles, "PubChem"
+    except:
+        pass
+
+    return None, None
 
 def get_features(mol):
     from rdkit.Chem import Descriptors, rdMolDescriptors
@@ -118,47 +193,6 @@ def get_feature_names():
         "Aromatic rings", "SP3 fraction", "Heteroatoms", "Total rings",
         "Radical electrons", "Valence electrons", "Amide bonds", "Heterocycles"
     ]
-
-def search_pubchem_all(name):
-    try:
-        url = (
-            "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
-            + requests.utils.quote(name.strip())
-            + "/property/CanonicalSMILES,IUPACName,MolecularFormula,MolecularWeight/JSON"
-        )
-        headers = {"Accept": "application/json", "User-Agent": "ConformalDock/1.0"}
-        resp = requests.get(url, timeout=15, headers=headers)
-        if resp.status_code != 200:
-            return []
-        compounds = resp.json()["PropertyTable"]["Properties"]
-        results = []
-        seen = set()
-        for c in compounds:
-            smiles = c.get("CanonicalSMILES", "")
-            formula = c.get("MolecularFormula", "")
-            iupac = c.get("IUPACName", "")
-            mw = c.get("MolecularWeight", "")
-            cid = c.get("CID", "")
-            if not smiles or formula in seen:
-                continue
-            seen.add(formula)
-            results.append({
-                "CID": str(cid),
-                "Name": iupac.title() if iupac else name.title(),
-                "Formula": formula,
-                "MW (g/mol)": str(mw),
-                "smiles": smiles,
-            })
-        return results
-    except:
-        return []
-
-def lookup_local(name):
-    key = name.strip().lower()
-    if key in MOLECULE_SMILES:
-        smiles, display_name, formula = MOLECULE_SMILES[key]
-        return {"smiles": smiles, "name": display_name, "formula": formula}
-    return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def fetch_chembl_data():
@@ -261,7 +295,7 @@ def show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage):
     atoms = mol.GetNumAtoms()
 
     if atoms > 100:
-        st.warning("This molecule is very large (" + str(atoms) + " atoms). ConformalDock is optimised for small drug-like molecules under 100 atoms. Results may be less reliable.")
+        st.warning("This molecule is very large (" + str(atoms) + " atoms). ConformalDock is optimised for small drug-like molecules. Results may be less reliable.")
 
     st.success("Molecule loaded — running prediction...")
 
@@ -380,7 +414,7 @@ with st.sidebar:
     st.markdown("### How it works")
     st.markdown("""
 1. Search any molecule by name
-2. Choose exact compound from results
+2. Resolved via NCI Cactus or PubChem
 3. **ChEMBL** provides real binding data
 4. **Gradient Boosting** predicts score
 5. **Conformal prediction** guarantees interval
@@ -442,80 +476,72 @@ with tab1:
         if asp:
             st.session_state["active_smiles"] = MOLECULE_SMILES["aspirin"][0]
             st.session_state["active_name"] = "Aspirin"
-            st.session_state["pubchem_results"] = []
             st.session_state["last_query"] = ""
         if caf:
             st.session_state["active_smiles"] = MOLECULE_SMILES["caffeine"][0]
             st.session_state["active_name"] = "Caffeine"
-            st.session_state["pubchem_results"] = []
             st.session_state["last_query"] = ""
         if mor:
             st.session_state["active_smiles"] = MOLECULE_SMILES["morphine"][0]
             st.session_state["active_name"] = "Morphine"
-            st.session_state["pubchem_results"] = []
             st.session_state["last_query"] = ""
         if dop:
             st.session_state["active_smiles"] = MOLECULE_SMILES["dopamine"][0]
             st.session_state["active_name"] = "Dopamine"
-            st.session_state["pubchem_results"] = []
             st.session_state["last_query"] = ""
         if thc:
             st.session_state["active_smiles"] = MOLECULE_SMILES["thc"][0]
             st.session_state["active_name"] = "THC"
-            st.session_state["pubchem_results"] = []
             st.session_state["last_query"] = ""
 
         drug_name = st.text_input(
             "Type any drug, molecule, or compound name",
-            placeholder="e.g. penicillin, cannabidiol, sildenafil, serotonin..."
+            placeholder="e.g. penicillin, cannabidiol, sildenafil, serotonin, chitosan..."
         )
 
         if drug_name and drug_name != st.session_state.get("last_query", ""):
             st.session_state["last_query"] = drug_name
             st.session_state["active_smiles"] = ""
             st.session_state["active_name"] = ""
+            st.session_state["source"] = ""
 
-            local = lookup_local(drug_name)
-            if local:
-                st.session_state["active_smiles"] = local["smiles"]
-                st.session_state["active_name"] = local["name"]
-                st.session_state["pubchem_results"] = []
+            key = drug_name.strip().lower()
+            if key in MOLECULE_SMILES:
+                smiles, name = MOLECULE_SMILES[key]
+                st.session_state["active_smiles"] = smiles
+                st.session_state["active_name"] = name
+                st.session_state["source"] = "local"
             else:
-                with st.spinner("Searching PubChem for " + drug_name + "..."):
-                    results = search_pubchem_all(drug_name)
-                st.session_state["pubchem_results"] = results
+                with st.spinner("Searching for " + drug_name + "..."):
+                    smiles, source = resolve_name_to_smiles(drug_name)
+                if smiles:
+                    st.session_state["active_smiles"] = smiles
+                    st.session_state["active_name"] = drug_name.title()
+                    st.session_state["source"] = source
+                else:
+                    st.session_state["active_smiles"] = ""
+                    st.session_state["active_name"] = ""
+                    st.session_state["source"] = "not_found"
 
-        results = st.session_state.get("pubchem_results", [])
         active_smiles = st.session_state.get("active_smiles", "")
         active_name = st.session_state.get("active_name", "")
+        source = st.session_state.get("source", "")
 
-        if results and not active_smiles:
-            st.markdown(
-                '<div class="section-label">Found ' + str(len(results)) + ' compounds — select one below</div>',
-                unsafe_allow_html=True
+        if source == "not_found" and st.session_state.get("last_query"):
+            st.error(
+                "Could not find \"" + st.session_state["last_query"] + "\". "
+                "Try a different name, spelling, or use the SMILES option above."
             )
-            for i, r in enumerate(results):
-                col_a, col_b, col_c, col_d = st.columns([3, 2, 1, 1])
-                with col_a:
-                    st.markdown("<span style='color:#a8a29e;font-size:11px'>" + r["Name"] + "</span>", unsafe_allow_html=True)
-                with col_b:
-                    st.markdown("<span style='color:#57534e;font-size:11px'>" + r["Formula"] + "</span>", unsafe_allow_html=True)
-                with col_c:
-                    st.markdown("<span style='color:#57534e;font-size:11px'>" + r["MW (g/mol)"] + " g/mol</span>", unsafe_allow_html=True)
-                with col_d:
-                    if st.button("Select", key="sel_" + str(i), use_container_width=True):
-                        st.session_state["active_smiles"] = r["smiles"]
-                        st.session_state["active_name"] = r["Name"]
-                        st.session_state["pubchem_results"] = []
-                        st.rerun()
+        elif active_smiles:
+            source_label = ""
+            if source == "local":
+                source_label = '<span class="source-tag">local</span>'
+            elif source:
+                source_label = '<span class="source-tag">' + source + '</span>'
 
-        elif drug_name and not active_smiles and not results and st.session_state.get("last_query") == drug_name:
-            st.error("No compounds found for \"" + drug_name + "\". Try a different spelling.")
-
-        if active_smiles:
             st.markdown(
                 '<div class="search-found">'
-                '<div class="search-name">Selected: ' + active_name + '</div>'
+                '<div class="search-name">' + active_name + source_label + '</div>'
                 '<div class="search-smiles">' + active_smiles[:80] + ('...' if len(active_smiles) > 80 else '') + '</div>'
                 '</div>',
                 unsafe_allow_html=True
@@ -526,7 +552,7 @@ with tab1:
                 st.markdown("---")
                 show_prediction(mol, model, scaler, cal_residuals, X_train_s, coverage)
             else:
-                st.error("Could not parse this compound's structure.")
+                st.error("Could not parse this compound's structure. Try searching by SMILES directly.")
 
 with tab2:
     st.markdown("## Benchmark results")
@@ -566,12 +592,11 @@ ConformalDock wraps any prediction with a **mathematically guaranteed**
 confidence interval using conformal prediction theory, trained on real
 experimental IC50 binding data from ChEMBL.
 
-### What makes this different
-- Search any molecule by name — see all matching compounds and pick the exact one
-- Trained on real ChEMBL IC50 measurements, not simulated data
-- Conformal prediction gives a valid coverage guarantee, not a heuristic
-- OOD detection tells you when the molecule is too unusual to trust
-- Feature importance explains every prediction
+### Molecule search
+Name resolution uses three layers in order:
+1. **Local dictionary** — instant results for 50+ common drugs
+2. **NCI Cactus** — the National Cancer Institute's free chemical name resolver
+3. **PubChem** — the world's largest open chemistry database
 
 ### How to cite
 *Kirtana Premnath (2026). ConformalDock: Calibrated Uncertainty Quantification
@@ -582,7 +607,8 @@ conformaldock-kirtana.streamlit.app*
 ### Links
 - Live app: conformaldock-kirtana.streamlit.app
 - GitHub: github.com/KirtanaPrem/conformaldock
-- Data source: ebi.ac.uk/chembl
+- Training data: ebi.ac.uk/chembl
+- Name resolution: cactus.nci.nih.gov · pubchem.ncbi.nlm.nih.gov
     """)
 
 st.markdown("---")
